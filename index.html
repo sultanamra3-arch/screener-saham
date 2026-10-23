@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Screener Saham S&amp;P 500 + Nasdaq-100</title>
+<meta name="description" content="Saring saham S&P 500 dan Nasdaq-100 dengan 7 metode investor dan trader, plus ringkasan gabungan per saham.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: trading-desk worksheet. Status bar, tab strip with live pass counts, criteria rail + results table. */
+:root{
+  --bg:#f3f5f7; --surface:#ffffff; --sunk:#e8ecf0; --line:#d5dce3;
+  --fg:#16212c; --muted:#5a6a79; --accent:#1f5f8b; --accent-ink:#ffffff; --accent-soft:#dbe8f2;
+  --good:#1d7a4f; --good-soft:#d9efe3; --warn:#9a6a00; --warn-soft:#f6ecd0; --bad:#b0413e; --bad-soft:#f5dcdb;
+  --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --r:8px; color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0f151b; --surface:#16202a; --sunk:#1c2834; --line:#2a3846;
+  --fg:#e3eaf0; --muted:#93a4b4; --accent:#6aaedb; --accent-ink:#0b1620; --accent-soft:#1d3447;
+  --good:#5cc993; --good-soft:#163527; --warn:#e2b54d; --warn-soft:#3a2f12; --bad:#ec8580; --bad-soft:#3d1d1c; color-scheme:dark}}
+*{box-sizing:border-box}
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+[hidden]{display:none!important}
+.wrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(26px,4vw,36px);font-weight:700;letter-spacing:-.01em}
+h2{font-size:22px;font-weight:700}
+h3{font-size:12px;font-family:var(--f-body);font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+p{margin:0}
+.lede{color:var(--muted);max-width:70ch}
+.num,.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+button,select{font:inherit;font-size:14px;cursor:pointer;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:7px 12px}
+button:hover,select:hover{border-color:var(--accent)}
+button:focus-visible,input:focus-visible,select:focus-visible,tr.row:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input[type=number],input[type=search]{font:inherit;font-size:14px;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
+.note{font-size:13px;color:var(--muted)}
+
+.status{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;font-size:14px}
+.status .dot{width:9px;height:9px;border-radius:50%;background:var(--good);display:inline-block;margin-right:6px}
+.status .dot.old{background:var(--warn)} .status .dot.none{background:var(--bad)}
+.status b{font-weight:600}
+
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--surface)}
+.seg button{border:none;border-radius:0;padding:7px 12px}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--accent-ink)}
+.filters input[type=search]{width:170px}
+
+.tabs{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:8px}
+@media (max-width:1100px){.tabs{grid-template-columns:repeat(5,minmax(0,1fr))}}
+@media (max-width:640px){.tabs{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.tab{display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;padding:9px 11px;border-radius:var(--r);background:var(--surface);border:1px solid var(--line);min-width:0}
+.tab .k{font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tab .n{font-family:var(--f-display);font-size:16px;font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.tab .c{font-size:12px;color:var(--muted)}
+.tab .c b{font-family:var(--f-mono);color:var(--good);font-weight:500}
+.tab[aria-selected=true]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.tab[aria-selected=true] .k,.tab[aria-selected=true] .c,.tab[aria-selected=true] .c b{color:var(--accent-ink);opacity:.9}
+
+.main{display:grid;grid-template-columns:290px minmax(0,1fr);gap:18px;align-items:start}
+.main.full{grid-template-columns:minmax(0,1fr)}
+@media (max-width:900px){.main{grid-template-columns:minmax(0,1fr)}}
+.rail{display:flex;flex-direction:column;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.who{font-size:13px;color:var(--muted)}
+.crit{display:flex;flex-direction:column;gap:8px}
+.cr{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:6px;font-size:14px}
+.cr .op{font-family:var(--f-mono);color:var(--muted);font-size:13px}
+.cr input{width:76px;text-align:right;font-family:var(--f-mono);font-size:13px}
+.cr .u{grid-column:1/-1;font-size:12px;color:var(--muted);margin-top:-6px}
+.results{display:flex;flex-direction:column;gap:12px;min-width:0}
+.rhead{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:end;justify-content:space-between}
+.rhead .l{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1 1 300px}
+.rhead label{font-size:14px;display:flex;align-items:center;gap:6px;cursor:pointer}
+.tablebox{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+table{border-collapse:collapse;width:100%;min-width:680px;font-size:14px}
+th{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--sunk)}
+th.num,td.num{text-align:right}
+td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr.row{cursor:pointer}
+tr.row:hover td{background:var(--sunk)}
+tbody tr:last-child td{border-bottom:none}
+.tk{font-family:var(--f-mono);font-weight:500}
+.nm{color:var(--muted);font-size:13px;display:block;max-width:230px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ix{font-size:10.5px;font-family:var(--f-mono);padding:1px 5px;border-radius:4px;background:var(--accent-soft);color:var(--accent);margin-left:6px;vertical-align:1px}
+.score{display:flex;align-items:center;gap:8px;min-width:110px}
+.bar{flex:1;height:6px;border-radius:3px;background:var(--sunk);overflow:hidden;min-width:50px}
+.bar i{display:block;height:100%;background:var(--warn)}
+.bar i.full{background:var(--good)} .bar i.low{background:var(--bad)}
+.pips{display:flex;gap:3px}
+.pip{width:9px;height:9px;border-radius:2px;background:var(--bad-soft);border:1px solid var(--bad)}
+.pip.y{background:var(--good);border-color:var(--good)}
+.pip.na{background:transparent;border:1px dashed var(--muted)}
+.mcells{display:flex;gap:4px}
+.mc{width:26px;height:22px;border-radius:4px;display:grid;place-items:center;font-size:11px;font-weight:600;font-family:var(--f-mono);background:var(--bad-soft);color:var(--bad)}
+.mc.pass{background:var(--good);color:var(--accent-ink)}
+.mc.part{background:var(--warn-soft);color:var(--warn)}
+.mc.na{background:transparent;border:1px dashed var(--muted);color:var(--muted)}
+.big{font-family:var(--f-display);font-size:18px;font-weight:700}
+.detail td{background:var(--sunk);font-size:13px}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px 22px}
+.dgrid h4{margin:0 0 4px;font-size:13px;font-weight:600;display:flex;justify-content:space-between}
+.dl{display:flex;flex-direction:column;gap:3px}
+.dl div{display:flex;justify-content:space-between;gap:8px}
+.ok{color:var(--good)} .no{color:var(--bad)} .na{color:var(--muted)}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted);align-items:center}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+
+.etfgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media (max-width:900px){.etfgrid{grid-template-columns:minmax(0,1fr)}}
+.etf{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:10px}
+.etf .t{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.etf .t span:first-child{font-family:var(--f-mono);font-size:22px;font-weight:500}
+.kv{display:flex;flex-direction:column;gap:4px;font-size:14px}
+.kv div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed var(--line);padding-bottom:3px}
+.kv div:last-child{border-bottom:none}
+.prose{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:10px;max-width:80ch}
+.prose ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+footer{font-size:13px;color:var(--muted);max-width:85ch;display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion:no-preference){.bar i{transition:width .3s ease}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:6px">
+    <h1>Screener Saham S&amp;P 500 + Nasdaq-100</h1>
+    <p class="lede">Tujuh metode investor dan trader yang paling banyak teruji, diterapkan ke semua anggota S&amp;P 500 dan Nasdaq-100. Mulai dari tab Ringkasan untuk melihat saham yang lolos banyak metode sekaligus.</p>
+  </header>
+
+  <section class="status" id="status" aria-live="polite"><span><span class="dot none"></span>Memuat data…</span></section>
+
+  <div class="filters" id="filters">
+    <div class="seg" role="group" aria-label="Indeks">
+      <button type="button" data-ix="ALL" aria-pressed="true">Semua</button>
+      <button type="button" data-ix="SP500" aria-pressed="false">S&amp;P 500</button>
+      <button type="button" data-ix="NDX" aria-pressed="false">Nasdaq-100</button>
+    </div>
+    <select id="sector" aria-label="Sektor"><option value="">Semua sektor</option></select>
+    <input type="search" id="q" placeholder="Cari ticker atau nama" aria-label="Cari ticker atau nama">
+  </div>
+
+  <nav class="tabs" role="tablist" id="tabs" aria-label="Metode"></nav>
+
+  <section class="main" id="main">
+    <aside class="rail" id="rail"></aside>
+    <div class="results" id="results"></div>
+  </section>
+
+  <footer>
+    <p>Fundamental dari Finnhub, harga harian dari Yahoo Finance, daftar anggota indeks dari Wikipedia. Data diperbarui otomatis setiap Selasa–Sabtu pukul 06.00 WIB, setelah bursa AS tutup.</p>
+    <p>Screener ini menyaring berdasarkan angka, bukan memberi rekomendasi beli atau jual. Lolos saringan berarti layak diteliti lebih lanjut. Ambang default meniru aturan umum tiap tokoh dan bisa Anda ubah; perubahan tersimpan di browser ini.</p>
+  </footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const store = {
+  get(k){try{return localStorage.getItem(k)}catch(e){return null}},
+  set(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+};
+
+// [field, op, default, label, hint]
+const M = [
+ {id:"value",abbr:"V",name:"Value",title:"Value investing",who:"Benjamin Graham, Warren Buffett",
+  desc:"Saham yang murah dibanding laba dan asetnya, dengan neraca sehat. Ambang default mengikuti aturan defensif Graham, termasuk P/E × P/B ≤ 22,5.",
+  crit:[["pe",">",0,"P/E positif",""],["pe","<=",15,"P/E maksimal",""],["pb","<=",1.5,"P/B maksimal",""],["graham","<=",22.5,"P/E × P/B maksimal","angka Graham"],["de","<=",1,"Debt/Equity maksimal",""],["cr",">=",1.5,"Current ratio minimal",""]],
+  cols:["pe","pb","graham","de","cr"]},
+ {id:"growth",abbr:"G",name:"Growth",title:"Growth investing",who:"Philip Fisher, Peter Lynch",
+  desc:"Perusahaan dengan laba dan penjualan yang tumbuh cepat tanpa harga yang berlebihan. PEG ala Lynch membandingkan P/E dengan laju pertumbuhan laba 5 tahun.",
+  crit:[["eps5y",">=",15,"EPS growth 5 tahun minimal","% per tahun"],["sales5y",">=",10,"Sales growth 5 tahun minimal","% per tahun"],["epsTTM",">=",15,"EPS growth 12 bulan terakhir minimal","% dibanding tahun lalu"],["peg","<=",1.5,"PEG maksimal","P/E ÷ EPS growth 5 tahun"]],
+  cols:["eps5y","sales5y","epsTTM","peg"]},
+ {id:"quality",abbr:"Q",name:"Quality",title:"Quality investing",who:"Terry Smith, Buffett era modern",
+  desc:"Bisnis yang sangat menguntungkan, punya daya tawar harga (margin kotor tinggi), utang kecil, dan laba yang terus naik.",
+  crit:[["roe",">=",15,"ROE minimal","%"],["gm",">=",40,"Gross margin minimal","%"],["om",">=",15,"Operating margin minimal","%"],["de","<=",0.5,"Debt/Equity maksimal",""],["eps5y",">",0,"EPS growth 5 tahun positif","%"]],
+  cols:["roe","gm","om","de"]},
+ {id:"dividend",abbr:"D",name:"Dividen",title:"Dividend investing",who:"Gaya Dividend Aristocrats",
+  desc:"Dividen yang cukup besar dan berkelanjutan: payout tidak berlebihan, utang terkendali, laba tidak menyusut.",
+  crit:[["div",">=",2.5,"Dividend yield minimal","%"],["payout",">",0,"Payout ratio di atas 0","%"],["payout","<=",70,"Payout ratio maksimal","%"],["de","<=",1,"Debt/Equity maksimal",""],["eps5y",">=",0,"EPS growth 5 tahun tidak negatif","%"]],
+  cols:["div","payout","de","eps5y"]},
+ {id:"momentum",abbr:"M",name:"Momentum",title:"Momentum & trend following",who:"Jegadeesh & Titman, para trend follower",
+  desc:"Saham yang sudah naik kuat cenderung lanjut naik dalam jangka menengah. Dicari kinerja 6–12 bulan yang kuat, harga di atas rata-rata bergerak, dan dekat titik tertinggi.",
+  crit:[["perf1y",">=",20,"Kinerja 1 tahun minimal","%"],["perf6m",">=",10,"Kinerja 6 bulan minimal","%"],["sma200",">",0,"Harga di atas SMA200","% jarak"],["sma50",">",0,"Harga di atas SMA50","% jarak"],["hi52",">=",-15,"Maks. turun dari 52W high","% (negatif)"]],
+  cols:["perf1y","perf6m","sma200","hi52"]},
+ {id:"canslim",abbr:"C",name:"CAN SLIM",title:"CAN SLIM",who:"William O'Neil, Mark Minervini",
+  desc:"Laba kuartalan dan tahunan melonjak (C, A), penjualan ikut naik (S), harga dekat titik tertinggi (N), dan mengungguli pasar (L). Data kepemilikan institusi (I) tidak tersedia di paket gratis, dan arah pasar (M) tetap perlu Anda cek sendiri.",
+  crit:[["epsQ",">=",25,"C: EPS growth kuartal minimal","% vs kuartal sama tahun lalu"],["epsTTM",">=",25,"A: EPS growth 12 bulan minimal","%"],["salesQ",">=",20,"S: sales growth kuartal minimal","%"],["hi52",">=",-15,"N: maks. turun dari 52W high","% (negatif)"],["relSP",">=",10,"L: unggul dari S&P 500 (1 tahun) minimal","% poin"],["sma50",">",0,"Harga di atas SMA50","% jarak"]],
+  cols:["epsQ","epsTTM","salesQ","hi52","relSP"]},
+ {id:"swing",abbr:"S",name:"Swing",title:"Swing trading (pullback)",who:"Trader teknikal jangka pendek",
+  desc:"Saham dalam tren naik yang sedang koreksi ringan ke dekat SMA20, dengan RSI netral. Pola ini dipakai untuk masuk saat harga beristirahat sebelum melanjutkan tren.",
+  crit:[["sma200",">",0,"Tren besar naik (di atas SMA200)","% jarak"],["sma50",">",0,"Tren menengah naik (di atas SMA50)","% jarak"],["sma20",">=",-4,"Jarak dari SMA20 minimal","%"],["sma20","<=",2,"Jarak dari SMA20 maksimal","%"],["rsi",">=",40,"RSI minimal",""],["rsi","<=",60,"RSI maksimal",""]],
+  cols:["sma20","sma50","rsi","perf1m"]},
+];
+const TABS = [{id:"summary",name:"Ringkasan",k:"Gabungan"}].concat(M.map((m,i)=>({id:m.id,name:m.name,k:(i<4?"Investor":"Trader")+" · "+(i+1)}))).concat([{id:"etf",name:"ETF",k:"VOO · SPY · QQQ"}]);
+const SHORT = {mcap:"Mkt cap",beta:"Beta",pe:"P/E",pb:"P/B",graham:"P/E×P/B",de:"D/E",cr:"Curr. ratio",eps5y:"EPS 5Y",sales5y:"Sales 5Y",epsTTM:"EPS 12 bln",peg:"PEG",roe:"ROE",gm:"Gross M.",om:"Op. M.",div:"Yield",payout:"Payout",perf1y:"1 thn",perf6m:"6 bln",perf1m:"1 bln",sma200:"vs SMA200",sma50:"vs SMA50",sma20:"vs SMA20",hi52:"vs 52W hi",epsQ:"EPS kuartal",salesQ:"Sales kuartal",relSP:"vs S&P",rsi:"RSI",price:"Harga"};
+const PCT = new Set(["div","payout","roe","gm","om","eps5y","sales5y","epsTTM","epsQ","salesQ","perf1m","perf6m","perf1y","perfYtd","hi52","sma20","sma50","sma200","relSP"]);
+const SIGNED = new Set(["eps5y","sales5y","epsTTM","epsQ","salesQ","perf1m","perf6m","perf1y","perfYtd","sma20","sma50","sma200","relSP"]);
+
+let DATA = null, rows = [];
+let tab = (location.hash||"").slice(1);
+if(!TABS.some(t=>t.id===tab)) tab = store.get("ss.tab") || "summary";
+if(!TABS.some(t=>t.id===tab)) tab = "summary";
+let thresholds = {}; try{ thresholds = JSON.parse(store.get("ss.thr")||"{}")||{} }catch(e){}
+let ixFilter = store.get("ss.ix") || "ALL";
+let openTicker = null;
+
+// ---------- evaluation ----------
+function val(o,k){
+  if(k==="graham") return (o.pe>0&&o.pb>0)? o.pe*o.pb : null;
+  if(k==="peg") return (o.pe>0&&o.eps5y>0)? o.pe/o.eps5y : null;
+  const v=o[k]; return (typeof v==="number"&&isFinite(v))? v : null;
+}
+const thr = (m,i) => { const k=m.id+"."+i; return (k in thresholds)? thresholds[k] : m.crit[i][2] };
+function check(o,m){
+  return m.crit.map((c,i)=>{ const v=val(o,c[0]), t=thr(m,i);
+    if(v==null) return {v,t,pass:null};
+    return {v,t,pass: c[1]===">=" ? v>=t : c[1]==="<=" ? v<=t : c[1]===">" ? v>t : v<t}; });
+}
+let cache = new Map();
+function evalStock(o){
+  let e = cache.get(o.ticker); if(e) return e;
+  const per = {}; let passed = 0, sum = 0;
+  M.forEach(m=>{ const res=check(o,m); const ok=res.filter(r=>r.pass).length; const na=res.every(r=>r.pass===null);
+    const full = ok===res.length; if(full) passed++; const sc=ok/res.length; sum+=sc;
+    per[m.id]={res,ok,n:res.length,full,score:sc,na}; });
+  e = {o,per,passed,score:sum/M.length}; cache.set(o.ticker,e); return e;
+}
+function filtered(){
+  const q=$("q").value.trim().toLowerCase(), sec=$("sector").value;
+  return rows.filter(o=>(ixFilter==="ALL"||(o.idx||[]).includes(ixFilter)) && (!sec||o.sector===sec) &&
+    (!q || (o.ticker+" "+(o.company||"")).toLowerCase().includes(q)));
+}
+function style(e){
+  const p = M.filter(m=>e.per[m.id].full).map(m=>m.name);
+  if(p.length) return p.join(" + ");
+  const best = M.map(m=>[m,e.per[m.id].score]).sort((a,b)=>b[1]-a[1])[0];
+  return best && best[1]>=0.75 ? "Mendekati "+best[0].name : "–";
+}
+
+// ---------- format ----------
+function fmt(k,v){
+  if(v==null) return '<span class="na">–</span>';
+  if(k==="mcap") return v>=1e6? "$"+(v/1e6).toFixed(2)+"T" : v>=1e3? "$"+(v/1e3).toFixed(1)+"B" : "$"+v.toFixed(0)+"M";
+  if(k==="price") return "$"+v.toFixed(2);
+  if(PCT.has(k)) return (SIGNED.has(k)&&v>0?"+":"")+v.toFixed(1)+"%";
+  if(k==="rsi") return v.toFixed(0);
+  return Math.abs(v)>=100? v.toFixed(0) : v.toFixed(2);
+}
+const opTxt = o => o.replace(">=","≥").replace("<=","≤");
+function ixBadges(o){ return (o.idx||[]).map(x=>`<span class="ix">${x==="SP500"?"S&amp;P":"NDX"}</span>`).join("") }
+function stockCell(o){ return `<td><span class="tk">${esc(o.ticker)}</span>${ixBadges(o)}<span class="nm">${esc(o.company||"")}${o.sector?" · "+esc(o.sector):""}</span></td>` }
+
+// ---------- render ----------
+function renderStatus(){
+  const el=$("status");
+  if(!DATA){ el.innerHTML = `<span><span class="dot none"></span><b>Data belum tersedia.</b> Jalankan workflow "Update data saham" di tab Actions GitHub, lalu muat ulang halaman ini setelah selesai (sekitar 15 menit).</span>`; return; }
+  const d=new Date(DATA.updatedAt), ageH=(Date.now()-d)/36e5;
+  const wib = d.toLocaleString("id-ID",{timeZone:"Asia/Jakarta",weekday:"long",day:"numeric",month:"long",year:"numeric",hour:"2-digit",minute:"2-digit"});
+  const miss = (DATA.missingFundamentals||[]).length;
+  el.innerHTML = `<span><span class="dot ${ageH>80?"old":""}"></span>Diperbarui <b>${esc(wib)} WIB</b></span>
+    <span class="num">${rows.length} saham</span>
+    ${miss?`<span class="note">${miss} saham tanpa data fundamental hari ini</span>`:""}
+    ${DATA.sources&&!DATA.sources.prices?`<span class="note" style="color:var(--warn)">Data harga harian gagal diambil; SMA, RSI dan 52W high kosong</span>`:""}`;
+}
+function renderTabs(){
+  const list = filtered();
+  const counts = {};
+  M.forEach(m=>counts[m.id]=list.filter(o=>evalStock(o).per[m.id].full).length);
+  const multi = list.filter(o=>evalStock(o).passed>=3).length;
+  $("tabs").innerHTML = TABS.map(t=>{
+    let c = "";
+    if(t.id==="summary") c = `<b>${multi}</b> lolos ≥3 metode`;
+    else if(t.id==="etf") c = "Perbandingan";
+    else c = `<b>${counts[t.id]}</b> lolos semua`;
+    return `<button class="tab" role="tab" type="button" aria-selected="${t.id===tab}" data-id="${t.id}"><span class="k">${esc(t.k)}</span><span class="n">${esc(t.name)}</span><span class="c">${c}</span></button>`;
+  }).join("");
+}
+function renderRail(){
+  const m = M.find(x=>x.id===tab), rail=$("rail");
+  $("main").classList.toggle("full", !m);
+  rail.hidden = !m;
+  if(!m) return;
+  let h = `<div style="display:flex;flex-direction:column;gap:6px"><h3>Metode</h3><h2>${esc(m.title)}</h2><p class="who">${esc(m.who)}</p></div>
+    <p style="font-size:14px">${esc(m.desc)}</p><div class="crit"><h3>Kriteria</h3>`;
+  m.crit.forEach((c,i)=>{ const id=`thr-${m.id}-${i}`;
+    h+=`<div class="cr"><label for="${id}">${esc(c[3])}</label><span class="op">${opTxt(c[1])}</span><input type="number" step="any" id="${id}" data-i="${i}" value="${thr(m,i)}">${c[4]?`<span class="u">${esc(c[4])}</span>`:""}</div>`; });
+  h+=`<button type="button" id="resetThr" style="align-self:flex-start">Kembalikan ke default</button></div>`;
+  rail.innerHTML = h;
+  rail.querySelectorAll("input[type=number]").forEach(inp=>inp.addEventListener("input",()=>{
+    const v=parseFloat(inp.value), k=m.id+"."+inp.dataset.i;
+    if(isFinite(v)) thresholds[k]=v; else delete thresholds[k];
+    store.set("ss.thr",JSON.stringify(thresholds)); cache.clear(); renderTabs(); renderResults();
+  }));
+  $("resetThr").addEventListener("click",()=>{ m.crit.forEach((c,i)=>delete thresholds[m.id+"."+i]); store.set("ss.thr",JSON.stringify(thresholds)); cache.clear(); renderRail(); renderTabs(); renderResults(); });
+}
+
+function detailAll(e){
+  return `<div class="dgrid">${M.map(m=>{ const p=e.per[m.id];
+    return `<div><h4><span>${esc(m.name)}</span><span class="num ${p.full?"ok":p.ok/p.n>=.5?"":"no"}">${p.ok}/${p.n}</span></h4><div class="dl">${m.crit.map((c,i)=>{const r=p.res[i];
+      return `<div><span>${esc(c[3])} ${opTxt(c[1])} ${r.t}</span><span class="num ${r.pass===true?"ok":r.pass===null?"na":"no"}">${r.pass===null?"tidak ada":fmt(c[0],r.v)}</span></div>`}).join("")}</div></div>`;}).join("")}
+    <div><h4><span>Lainnya</span></h4><div class="dl">${["price","mcap","beta","perf1m","perfYtd"].map(k=>`<div><span>${k==="perfYtd"?"Sejak awal tahun":k==="beta"?"Beta":SHORT[k]}</span><span class="num">${fmt(k==="perfYtd"?"perf1y":k,val(e.o,k))}</span></div>`).join("")}</div></div></div>`;
+}
+
+function renderSummary(box){
+  const minSel = parseInt(store.get("ss.min")||"0",10)||0;
+  let list = filtered().map(evalStock).sort((a,b)=>b.passed-a.passed || b.score-a.score || (b.o.mcap||0)-(a.o.mcap||0));
+  const total = list.length;
+  const dist = [0,0,0,0,0,0,0,0]; list.forEach(e=>dist[e.passed]++);
+  if(minSel) list = list.filter(e=>e.passed>=minSel);
+  box.innerHTML = `<div class="rhead"><div class="l"><h2>Gabungan 7 metode per saham</h2>
+      <p class="note">Diurutkan dari jumlah metode yang lolos penuh, lalu skor gabungan (rata-rata persentase kriteria terpenuhi). ${dist.slice(3).reduce((a,b)=>a+b,0)} dari ${total} saham lolos 3 metode atau lebih.</p></div>
+      <label for="minPass">Minimal lolos <select id="minPass">${[0,1,2,3,4,5].map(n=>`<option value="${n}" ${n===minSel?"selected":""}>${n===0?"Semua":n+" metode"}</option>`).join("")}</select></label></div>
+    <div class="legend">${M.map(m=>`<span><span class="mc pass" style="width:20px;height:18px">${m.abbr}</span>${esc(m.name)}</span>`).join("")}
+      <span><span class="mc pass" style="width:14px;height:14px"></span>lolos</span><span><span class="mc part" style="width:14px;height:14px"></span>sebagian (≥50%)</span><span><span class="mc" style="width:14px;height:14px"></span>gagal</span><span><span class="mc na" style="width:14px;height:14px"></span>tanpa data</span></div>
+    <div class="tablebox"><table><thead><tr><th>Saham</th><th class="num">Lolos</th><th>Skor gabungan</th><th>Status per metode</th><th>Gaya dominan</th><th class="num">Mkt cap</th><th class="num">1 thn</th></tr></thead><tbody id="tb"></tbody></table></div>
+    <p class="note">Klik baris untuk melihat semua kriteria dari 7 metode. Beberapa metode saling bertolak belakang (Value dan Momentum jarang lolos bersamaan), jadi lolos 3–4 metode sudah termasuk kuat.</p>`;
+  $("minPass").addEventListener("change",ev=>{ store.set("ss.min",ev.target.value); renderResults(); });
+  const tb=$("tb");
+  if(!list.length){ tb.innerHTML=`<tr><td colspan="7" class="empty">Tidak ada saham yang cocok dengan filter ini.</td></tr>`; return; }
+  tb.innerHTML = list.slice(0,600).map(e=>{
+    const pct=Math.round(e.score*100), cls=e.score>=.75?"full":e.score<.4?"low":"";
+    let tr=`<tr class="row" data-t="${esc(e.o.ticker)}" tabindex="0" aria-expanded="${openTicker===e.o.ticker}">${stockCell(e.o)}
+      <td class="num"><span class="big">${e.passed}</span><span class="na">/7</span></td>
+      <td><div class="score"><span class="num" style="min-width:34px">${pct}</span><span class="bar"><i class="${cls}" style="width:${pct}%"></i></span></div></td>
+      <td><div class="mcells">${M.map(m=>{const p=e.per[m.id]; const c=p.na?"na":p.full?"pass":p.score>=.5?"part":""; return `<span class="mc ${c}" title="${esc(m.name)}: ${p.ok}/${p.n}">${m.abbr}</span>`}).join("")}</div></td>
+      <td>${esc(style(e))}</td><td class="num">${fmt("mcap",e.o.mcap)}</td><td class="num">${fmt("perf1y",e.o.perf1y)}</td></tr>`;
+    if(openTicker===e.o.ticker) tr+=`<tr class="detail"><td colspan="7">${detailAll(e)}</td></tr>`;
+    return tr;
+  }).join("");
+}
+
+function renderMethod(box,m){
+  const only = store.get("ss.only")==="1";
+  let list = filtered().map(o=>({e:evalStock(o),o})).sort((a,b)=>b.e.per[m.id].score-a.e.per[m.id].score || (b.o.mcap||0)-(a.o.mcap||0));
+  const full = list.filter(x=>x.e.per[m.id].full).length, total=list.length;
+  if(only) list = list.filter(x=>x.e.per[m.id].full);
+  const n=m.crit.length;
+  box.innerHTML = `<div class="rhead"><div class="l"><h2>${full} dari ${total} saham lolos semua kriteria</h2><p class="note">Diurutkan dari jumlah kriteria ${esc(m.title)} yang terpenuhi.</p></div>
+      <label><input type="checkbox" id="onlyFull" ${only?"checked":""}> Hanya lolos semua</label></div>
+    <div class="tablebox"><table><thead><tr><th>Saham</th><th>Skor</th><th>Kriteria</th>${m.cols.map(k=>`<th class="num">${esc(SHORT[k]||k)}</th>`).join("")}</tr></thead><tbody id="tb"></tbody></table></div>
+    <p class="note">Klik baris untuk rincian. Kotak hijau = lolos, merah = gagal, putus-putus = data tidak tersedia (dihitung gagal).</p>`;
+  $("onlyFull").addEventListener("change",ev=>{ store.set("ss.only",ev.target.checked?"1":"0"); renderResults(); });
+  const tb=$("tb");
+  if(!list.length){ tb.innerHTML=`<tr><td colspan="${3+m.cols.length}" class="empty">Belum ada saham yang cocok. Longgarkan ambang di panel kiri, atau matikan "Hanya lolos semua".</td></tr>`; return; }
+  tb.innerHTML = list.slice(0,600).map(({e,o})=>{ const p=e.per[m.id];
+    const pct=Math.round(p.score*100), cls=p.full?"full":p.score<.5?"low":"";
+    let tr=`<tr class="row" data-t="${esc(o.ticker)}" tabindex="0" aria-expanded="${openTicker===o.ticker}">${stockCell(o)}
+      <td><div class="score"><span class="num" style="min-width:30px">${p.ok}/${n}</span><span class="bar"><i class="${cls}" style="width:${pct}%"></i></span></div></td>
+      <td><div class="pips">${p.res.map(r=>`<span class="pip ${r.pass===true?"y":r.pass===null?"na":""}"></span>`).join("")}</div></td>
+      ${m.cols.map(k=>`<td class="num">${fmt(k,val(o,k))}</td>`).join("")}</tr>`;
+    if(openTicker===o.ticker) tr+=`<tr class="detail"><td colspan="${3+m.cols.length}">${detailAll(e)}</td></tr>`;
+    return tr;
+  }).join("");
+}
+
+function renderEtf(box){
+  const E = (DATA&&DATA.etf)||{};
+  const card = t => { const d=E[t]||{};
+    return `<article class="etf"><div class="t"><span>${t}</span><span class="note">${esc(d.index||"")}</span></div><p class="note">${esc(d.name||"")}</p>
+      <div class="kv">
+        <div><span>Harga</span><span class="num">${fmt("price",d.price)}</span></div>
+        <div><span>Rasio biaya per tahun</span><span class="num">${d.expense!=null?d.expense.toFixed(4).replace(/0+$/,"").replace(/\.$/,"")+"%":"–"}</span></div>
+        <div><span>Dana kelolaan</span><span class="num">${d.aum?("$"+(d.aum/1e9).toFixed(0)+" miliar"):"–"}</span></div>
+        <div><span>Dividend yield</span><span class="num">${d.yield!=null?d.yield.toFixed(2)+"%":"–"}</span></div>
+        <div><span>Kinerja 1 bulan</span><span class="num">${fmt("perf1m",d.perf1m)}</span></div>
+        <div><span>Kinerja 6 bulan</span><span class="num">${fmt("perf6m",d.perf6m)}</span></div>
+        <div><span>Sejak awal tahun</span><span class="num">${fmt("perf1y",d.perfYtd)}</span></div>
+        <div><span>Kinerja 1 tahun</span><span class="num">${fmt("perf1y",d.perf1y)}</span></div>
+        <div><span>Jarak dari 52W high</span><span class="num">${fmt("hi52",d.hi52)}</span></div>
+      </div>${d.expenseSource==="cadangan"?`<p class="note">Rasio biaya dari catatan bawaan; cek situs penerbit untuk angka terbaru.</p>`:""}</article>`; };
+  box.innerHTML = `<div class="rhead"><div class="l"><h2>Beli indeksnya langsung: VOO, SPY, atau QQQ</h2><p class="note">Index investing adalah metode dengan bukti terkuat. Daripada memilih saham satu per satu, Anda bisa membeli seluruh indeks lewat satu ETF.</p></div></div>
+    <div class="etfgrid">${["VOO","SPY","QQQ"].map(card).join("")}</div>
+    <div class="prose"><h3>Cara membaca perbandingan ini</h3><ul>
+      <li><b>VOO dan SPY</b> berisi saham yang sama (S&amp;P 500), jadi kinerjanya hampir identik. VOO lebih murah biaya tahunannya, cocok untuk ditahan lama. SPY lebih ramai diperdagangkan, lebih cocok untuk trader yang sering keluar-masuk.</li>
+      <li><b>QQQ</b> berisi 100 perusahaan non-keuangan terbesar di bursa Nasdaq, didominasi teknologi. Potensi naiknya lebih tinggi saat teknologi kuat, tetapi turunnya juga lebih dalam saat pasar jatuh.</li>
+      <li>Banyak investor jangka panjang memegang <b>S&amp;P 500 sebagai inti</b> dan menambah QQQ dalam porsi lebih kecil bila ingin bobot teknologi lebih besar.</li>
+    </ul></div>`;
+}
+
+function renderResults(){
+  const box=$("results");
+  if(!DATA){ box.innerHTML = `<div class="tablebox"><div class="empty">Belum ada data untuk disaring. Setelah workflow pertama selesai, tabel saham akan muncul di sini.</div></div>`; return; }
+  if(tab==="summary") renderSummary(box);
+  else if(tab==="etf") renderEtf(box);
+  else renderMethod(box, M.find(m=>m.id===tab));
+}
+function renderAll(){ renderStatus(); renderTabs(); renderRail(); renderResults(); }
+
+// ---------- events ----------
+$("tabs").addEventListener("click",ev=>{ const b=ev.target.closest(".tab"); if(!b) return; tab=b.dataset.id; openTicker=null; store.set("ss.tab",tab); try{history.replaceState(null,"","#"+tab)}catch(e){} renderTabs(); renderRail(); renderResults(); });
+function toggleRow(tr){ openTicker = openTicker===tr.dataset.t? null : tr.dataset.t; renderResults(); const again=document.querySelector(`tr.row[data-t="${CSS.escape(tr.dataset.t)}"]`); if(again) again.focus({preventScroll:true}); }
+$("results").addEventListener("click",ev=>{ const tr=ev.target.closest("tr.row"); if(tr) toggleRow(tr); });
+$("results").addEventListener("keydown",ev=>{ if(ev.key!=="Enter"&&ev.key!==" ") return; const tr=ev.target.closest("tr.row"); if(!tr) return; ev.preventDefault(); toggleRow(tr); });
+$("q").addEventListener("input",()=>{ renderTabs(); renderResults(); });
+$("sector").addEventListener("change",()=>{ renderTabs(); renderResults(); });
+document.querySelectorAll(".seg button").forEach(b=>{
+  b.setAttribute("aria-pressed", String(b.dataset.ix===ixFilter));
+  b.addEventListener("click",()=>{ ixFilter=b.dataset.ix; store.set("ss.ix",ixFilter); document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed",String(x===b))); renderTabs(); renderResults(); });
+});
+
+// ---------- boot ----------
+renderAll();
+fetch("data/stocks.json",{cache:"no-cache"}).then(r=>{ if(!r.ok) throw new Error(r.status); return r.json() }).then(d=>{
+  DATA=d; rows=(d.stocks||[]).filter(s=>s&&s.ticker);
+  const secs=[...new Set(rows.map(r=>r.sector).filter(Boolean))].sort();
+  $("sector").insertAdjacentHTML("beforeend", secs.map(s=>`<option>${esc(s)}</option>`).join(""));
+  renderAll();
+}).catch(()=>{ DATA=null; renderAll(); });
+})();
+</script>
+</body>
+</html>

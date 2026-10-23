@@ -1,0 +1,52 @@
+name: Update data saham
+
+on:
+  schedule:
+    # 23:00 UTC Senin–Jumat = 06:00 WIB Selasa–Sabtu (setelah bursa AS tutup)
+    - cron: "0 23 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      force_constituents:
+        description: "Paksa perbarui daftar anggota S&P 500 dan Nasdaq-100"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-data
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Pasang paket
+        run: pip install -r requirements.txt
+
+      - name: Ambil data
+        env:
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+          FORCE_CONSTITUENTS: ${{ inputs.force_constituents && '1' || '0' }}
+        run: python scripts/fetch_data.py
+
+      - name: Simpan ke repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          if git diff --cached --quiet; then
+            echo "Tidak ada perubahan data"
+          else
+            git commit -m "Update data $(date -u +%Y-%m-%d)"
+            git push
+          fi
