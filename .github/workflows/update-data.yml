@@ -2,8 +2,9 @@ name: Update data saham
 
 on:
   schedule:
-    # 23:00 UTC Senin–Jumat = 06:00 WIB Selasa–Sabtu (setelah bursa AS tutup)
-    - cron: "0 23 * * 1-5"
+    # 22:43 UTC Senin–Jumat = 05:43 WIB Selasa–Sabtu (setelah bursa AS tutup).
+    # Menit tidak bulat supaya tidak ikut antrean padat GitHub di jam bulat.
+    - cron: "43 22 * * 1-5"
   workflow_dispatch:
     inputs:
       force_constituents:
@@ -21,7 +22,7 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 50
     steps:
       - uses: actions/checkout@v5
 
@@ -33,7 +34,7 @@ jobs:
       - name: Pasang paket
         run: pip install -r requirements.txt
 
-      - name: Ambil data
+      - name: Ambil data dan hitung 7 metode
         env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
           FORCE_CONSTITUENTS: ${{ inputs.force_constituents && '1' || '0' }}
@@ -48,6 +49,7 @@ jobs:
             echo "Tidak ada perubahan data"
           else
             git commit -m "Update data $(date -u +%Y-%m-%d)"
+            git pull --rebase -q origin main || true
             git push
           fi
 

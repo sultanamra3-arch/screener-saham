@@ -2,7 +2,7 @@
 
 Website screener dengan 7 metode (Value, Growth, Quality, Dividen, Momentum, CAN SLIM, Swing), tab Ringkasan gabungan per saham, dan perbandingan ETF VOO / SPY / QQQ.
 
-Data diperbarui otomatis setiap **Selasa–Sabtu pukul 06.00 WIB** oleh GitHub Actions.
+Data diperbarui otomatis **Selasa–Sabtu sekitar pukul 05.45 WIB** oleh GitHub Actions. Pengingat order dikirim ke Telegram **Senin–Jumat pukul 19.30 WIB** bila ada sinyal beli.
 
 | Data | Sumber |
 |---|---|
@@ -10,12 +10,20 @@ Data diperbarui otomatis setiap **Selasa–Sabtu pukul 06.00 WIB** oleh GitHub A
 | Harga harian (SMA, RSI, kinerja, 52W high) | Yahoo Finance lewat `yfinance` |
 | Daftar anggota indeks (diperbarui tiap 30 hari) | Wikipedia |
 
-## Harga beli / tunggu / jual
+## Tujuh metode (aturan asli)
 
-- **Investor**: nilai wajar = P/E median sektor (dibatasi 10–30) × EPS, dirata-rata dengan angka Graham bila relevan. Beli di bawah nilai wajar dikurangi *margin of safety* (default 25%), jual di atas nilai wajar ditambah premi (default 20%). Saham dengan EPS negatif tidak dinilai.
-- **Trader**: area masuk di SMA20 (pullback) atau 52W high (breakout), stop loss 8%, target 25%. Jual bila harga di bawah SMA50/SMA200 atau target tercapai.
-- Persentase bisa diubah di website dan tersimpan di browser.
-- **Kapan beli / jual**: sinyal trader diuji mundur hari demi hari selama setahun dari harga harian (tanggal, harga, alasan jual, hasil). Status investor dicatat setiap pembaruan ke `data/signals.json`, sehingga terlihat sejak kapan dan di harga berapa status berubah.
+| Metode | Kapan beli | Kapan jual | Stop loss |
+|---|---|---|---|
+| Value (Graham) | 7 syarat investor defensif, P/E laba 3 tahun ≤ 15, P/E × P/B ≤ 22,5 | +50% atau setelah 2 tahun, atau dividen dihentikan | Tidak ada |
+| Growth (Lynch) | Laba tumbuh 20–50%/thn, PEG plus dividen ≤ 1, neraca kuat | PEG ≥ 2 atau pertumbuhan melambat drastis | Tidak ada |
+| Quality (Terry Smith) | ROIC ≥ 15%, margin kotor ≥ 40%, konversi kas ≥ 80%, FCF yield ≥ 2,5% | Kualitas memburuk atau FCF yield < 1,5% | Tidak ada |
+| Dividen | Yield ≥ 2,5%, dividen naik 5 tahun, Chowder rule, payout ≤ 70% | Dividen dipotong atau payout > 100% | Tidak ada |
+| CAN SLIM (O'Neil, Minervini) | C, A, ROE ≥ 17%, trend template, breakout base dengan volume ≥ 1,4×, pasar naik | Target +20% (aturan 8 minggu bila +20% dalam 3 minggu) | −7%, naik ke harga beli setelah +10% |
+| Momentum (Jegadeesh & Titman) | Peringkat 12-1 bulan ≥ 90, dicek awal bulan | Peringkat turun di bawah 80 | Tidak ada |
+| Swing (Connors RSI-2) | Di atas SMA200 dan RSI(2) < 10 | Menutup di atas SMA5 | Tidak ada |
+
+- Metode trader diuji mundur setahun dari harga harian; metode investor dicatat maju di `data/signals.json` sejak hari pertama.
+- Setiap sinyal menyertakan alasan dan harga patokan di website dan Telegram.
 
 ## Langkah pemasangan (sekali saja)
 
@@ -50,6 +58,8 @@ index.html                     website
 data/stocks.json               data terbaru (ditulis otomatis)
 data/constituents.json         daftar anggota indeks (ditulis otomatis)
 scripts/fetch_data.py          skrip pengambil data
+scripts/strategies.py          aturan 7 metode
+scripts/notify_telegram.py     pesan Telegram
 .github/workflows/update-data.yml  jadwal otomatis
 ```
 
