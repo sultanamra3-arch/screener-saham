@@ -114,6 +114,9 @@ tbody tr:last-child td{border-bottom:none}
 .st{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap}
 .st.buy{background:var(--good);color:var(--accent-ink)} .st.wait{background:var(--warn-soft);color:var(--warn)}
 .st.sell{background:var(--bad-soft);color:var(--bad)} .st.na{background:var(--sunk);color:var(--muted)}
+.sig{display:block;font-size:12px;margin-top:2px;white-space:nowrap}
+.trades{display:flex;flex-direction:column;gap:3px;margin-top:6px}
+.trades div{display:flex;justify-content:space-between;gap:10px}
 .lvl{display:block;font-size:12px;color:var(--muted);font-family:var(--f-mono);white-space:nowrap;margin-top:2px}
 .params{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 14px;font-size:14px}
 .params label{display:flex;align-items:center;gap:6px}
@@ -300,9 +303,47 @@ function plan(o){
 }
 const ST = {buy:"Beli",wait:"Tunggu",sell:"Jual",na:"Tidak dinilai"};
 const usd = v => v==null||!isFinite(v) ? "–" : "$"+(v>=1000? v.toFixed(0) : v.toFixed(2));
-function stCell(x, kind){
+const BLN = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+function tgl(d, year){ if(!d) return "–"; const [y,m,dd]=d.split("-"); return `${+dd} ${BLN[+m-1]}${year?" "+y:""}` }
+const pctTxt = v => v==null ? "–" : (v>0?"+":"")+v.toFixed(1)+"%";
+const REASON = {stop:"stop loss", target:"target", trend:"tren patah"};
+function invSigLine(o){
+  const g=o.invSig; if(!g) return "";
+  if(g.first) return `<span class="sig na">tercatat sejak ${tgl(g.since)}</span>`;
+  return `<span class="sig"><b>${ST[g.s]}</b> sejak ${tgl(g.since)}${g.px!=null?" di "+usd(g.px):""}</span>`;
+}
+function trSigLine(o){
+  const t=o.trSig; if(!t) return "";
+  const last=(t.trades||[])[t.trades.length-1];
+  if(!last) return `<span class="sig na">tidak ada sinyal setahun</span>`;
+  if(!last.s) return `<span class="sig"><b class="ok">Beli</b> ${tgl(last.b)} di ${usd(last.bp)} <span class="${last.ret>=0?"ok":"no"}">${pctTxt(last.ret)}</span></span>`;
+  return `<span class="sig"><b class="no">Jual</b> ${tgl(last.s)} di ${usd(last.sp)} (${REASON[last.r]}) <span class="${last.ret>=0?"ok":"no"}">${pctTxt(last.ret)}</span></span>`;
+}
+function stCell(x, kind, o){
   const sub = x.status==="na" ? "" : kind==="inv" ? `beli ≤ ${usd(x.buy)} · jual ≥ ${usd(x.sell)}` : `masuk ${usd(x.entry)} · stop ${usd(x.stop)}`;
-  return `<td><span class="st ${x.status}" title="${esc(x.why||"")}">${ST[x.status]}</span>${sub?`<span class="lvl">${sub}</span>`:""}</td>`;
+  const sig = o ? (kind==="inv" ? invSigLine(o) : trSigLine(o)) : "";
+  return `<td><span class="st ${x.status}" title="${esc(x.why||"")}">${ST[x.status]}</span>${sub?`<span class="lvl">${sub}</span>`:""}${sig}</td>`;
+}
+function sigDetail(o){
+  let h="";
+  const g=o.invSig;
+  h+=`<div><h4><span>Riwayat status investor</span></h4><div class="dl">`;
+  if(!g) h+=`<div><span class="na">Belum ada catatan. Status dicatat setiap pembaruan data.</span></div>`;
+  else {
+    h+=`<div><span>${g.first?"Status saat catatan dimulai":"Status sekarang"}: <b>${ST[g.s]}</b></span><span class="num">${g.first?"sejak":""} ${tgl(g.since,1)}${g.px!=null?" · "+usd(g.px):""}</span></div>`;
+    (o.invLog||[]).slice().reverse().forEach(l=>{ h+=`<div><span>${ST[l.s]}</span><span class="num">${tgl(l.since)} – ${tgl(l.until,1)}${l.px!=null?" · "+usd(l.px):""}</span></div>` });
+    h+=`<div><span class="na">Dicatat dengan pengaturan default (margin of safety 25%, premi 20%).</span></div>`;
+  }
+  h+=`</div></div>`;
+  const t=o.trSig;
+  h+=`<div><h4><span>Sinyal trader setahun terakhir</span>${t&&t.n?`<span class="num">${t.win}/${t.n} untung</span>`:""}</h4>`;
+  if(!t) h+=`<div class="dl"><div><span class="na">Riwayat sinyal muncul setelah pembaruan data berikutnya.</span></div></div>`;
+  else if(!(t.trades||[]).length) h+=`<div class="dl"><div><span class="na">Tidak ada sinyal beli dalam setahun terakhir.</span></div></div>`;
+  else {
+    h+=`<div class="trades">${t.trades.slice().reverse().map(x=>`<div><span>Beli ${tgl(x.b)} ${usd(x.bp)} → ${x.s?`Jual ${tgl(x.s)} ${usd(x.sp)} <span class="na">(${REASON[x.r]})</span>`:`<b>masih terbuka</b>`}</span><span class="num ${x.ret>=0?"ok":"no"}">${pctTxt(x.ret)}</span></div>`).join("")}</div>`;
+    h+=`<div class="dl" style="margin-top:6px">${t.n?`<div><span>Rata-rata hasil per sinyal</span><span class="num ${t.avg>=0?"ok":"no"}">${pctTxt(t.avg)}</span></div>`:""}<div><span class="na">Uji mundur dengan stop loss 8% dan target 25%, harga penutupan harian. Hasil masa lalu tidak menjamin hasil berikutnya.</span></div></div>`;
+  }
+  return h+`</div>`;
 }
 function planDetail(o){
   const {inv,tr}=plan(o);
@@ -402,6 +443,7 @@ function detailAll(e){
     return `<div><h4><span>${esc(m.name)}</span><span class="num ${p.full?"ok":p.ok/p.n>=.5?"":"no"}">${p.ok}/${p.n}</span></h4><div class="dl">${m.crit.map((c,i)=>{const r=p.res[i];
       return `<div><span>${esc(c[3])} ${opTxt(c[1])} ${r.t}</span><span class="num ${r.pass===true?"ok":r.pass===null?"na":"no"}">${r.pass===null?"tidak ada":fmt(c[0],r.v)}</span></div>`}).join("")}</div></div>`;}).join("")}
     ${planDetail(e.o)}
+    ${sigDetail(e.o)}
     <div><h4><span>Lainnya</span></h4><div class="dl">${["price","mcap","beta","perf1m","perfYtd"].map(k=>`<div><span>${k==="perfYtd"?"Sejak awal tahun":k==="beta"?"Beta":SHORT[k]}</span><span class="num">${fmt(k==="perfYtd"?"perf1y":k,val(e.o,k))}</span></div>`).join("")}</div></div></div>`;
 }
 
@@ -412,16 +454,17 @@ function renderSummary(box){
   const dist = [0,0,0,0,0,0,0,0]; list.forEach(e=>dist[e.passed]++);
   if(minSel) list = list.filter(e=>e.passed>=minSel);
   const stSel = store.get("ss.st")||"";
-  if(stSel){ const [k,v]=stSel.split(":"); list = list.filter(e=>plan(e.o)[k].status===v); }
+  if(stSel==="sig:open") list = list.filter(e=>e.o.trSig&&e.o.trSig.open);
+  else if(stSel){ const [k,v]=stSel.split(":"); list = list.filter(e=>plan(e.o)[k].status===v); }
   const nInvBuy = filtered().filter(o=>plan(o).inv.status==="buy").length, nTrBuy = filtered().filter(o=>plan(o).tr.status==="buy").length;
   box.innerHTML = paramsBar() + `<div class="rhead"><div class="l"><h2>Gabungan 7 metode per saham</h2>
       <p class="note">Diurutkan dari jumlah metode yang lolos penuh, lalu skor gabungan (rata-rata persentase kriteria terpenuhi). ${dist.slice(3).reduce((a,b)=>a+b,0)} dari ${total} saham lolos 3 metode atau lebih.</p></div>
-      <div style="display:flex;flex-wrap:wrap;gap:10px"><label for="stSel">Status <select id="stSel">${[["","Semua"],["inv:buy",`Investor: Beli (${nInvBuy})`],["inv:sell","Investor: Jual"],["tr:buy",`Trader: Beli (${nTrBuy})`],["tr:sell","Trader: Jual"]].map(([v,t])=>`<option value="${v}" ${v===stSel?"selected":""}>${t}</option>`).join("")}</select></label>
+      <div style="display:flex;flex-wrap:wrap;gap:10px"><label for="stSel">Status <select id="stSel">${[["","Semua"],["inv:buy",`Investor: Beli (${nInvBuy})`],["inv:sell","Investor: Jual"],["tr:buy",`Trader: Beli (${nTrBuy})`],["sig:open","Sinyal trader masih terbuka"],["tr:sell","Trader: Jual"]].map(([v,t])=>`<option value="${v}" ${v===stSel?"selected":""}>${t}</option>`).join("")}</select></label>
       <label for="minPass">Minimal lolos <select id="minPass">${[0,1,2,3,4,5].map(n=>`<option value="${n}" ${n===minSel?"selected":""}>${n===0?"Semua":n+" metode"}</option>`).join("")}</select></label></div></div>
     <div class="legend">${M.map(m=>`<span><span class="mc pass" style="width:20px;height:18px">${m.abbr}</span>${esc(m.name)}</span>`).join("")}
       <span><span class="mc pass" style="width:14px;height:14px"></span>lolos</span><span><span class="mc part" style="width:14px;height:14px"></span>sebagian (≥50%)</span><span><span class="mc" style="width:14px;height:14px"></span>gagal</span><span><span class="mc na" style="width:14px;height:14px"></span>tanpa data</span></div>
     <div class="tablebox"><table><thead><tr><th>Saham</th><th class="num">Harga</th><th class="num">Lolos</th><th>Skor gabungan</th><th>Status per metode</th><th>Investor</th><th>Trader</th><th>Gaya dominan</th></tr></thead><tbody id="tb"></tbody></table></div>
-    <p class="note">Klik baris untuk melihat semua kriteria dan cara hitung harga patokan. <b>Investor</b> memakai nilai wajar (P/E median sektor × EPS, dirata-rata dengan angka Graham bila relevan); <b>Trader</b> memakai tren SMA dengan stop loss dan target. Jual berarti jual bila sudah punya, hindari bila belum. Beberapa metode saling bertolak belakang (Value dan Momentum jarang lolos bersamaan), jadi lolos 3–4 metode sudah termasuk kuat.</p>`;
+    <p class="note">Klik baris untuk melihat semua kriteria dan cara hitung harga patokan. <b>Investor</b> memakai nilai wajar (P/E median sektor × EPS, dirata-rata dengan angka Graham bila relevan); <b>Trader</b> memakai tren SMA dengan stop loss dan target. Jual berarti jual bila sudah punya, hindari bila belum. Baris kecil di bawah status menunjukkan kapan sinyal terakhir muncul dan di harga berapa. Beberapa metode saling bertolak belakang (Value dan Momentum jarang lolos bersamaan), jadi lolos 3–4 metode sudah termasuk kuat.</p>`;
   $("minPass").addEventListener("change",ev=>{ store.set("ss.min",ev.target.value); renderResults(); });
   $("stSel").addEventListener("change",ev=>{ store.set("ss.st",ev.target.value); renderResults(); });
   bindParams();
@@ -435,7 +478,7 @@ function renderSummary(box){
       <td class="num"><span class="big">${e.passed}</span><span class="na">/7</span></td>
       <td><div class="score"><span class="num" style="min-width:34px">${pct}</span><span class="bar"><i class="${cls}" style="width:${pct}%"></i></span></div></td>
       <td><div class="mcells">${M.map(m=>{const p=e.per[m.id]; const c=p.na?"na":p.full?"pass":p.score>=.5?"part":""; return `<span class="mc ${c}" title="${esc(m.name)}: ${p.ok}/${p.n}">${m.abbr}</span>`}).join("")}</div></td>
-      ${stCell(pl.inv,"inv")}${stCell(pl.tr,"tr")}<td>${esc(style(e))}</td></tr>`;
+      ${stCell(pl.inv,"inv",e.o)}${stCell(pl.tr,"tr",e.o)}<td>${esc(style(e))}</td></tr>`;
     if(openTicker===e.o.ticker) tr+=`<tr class="detail"><td colspan="8">${detailAll(e)}</td></tr>`;
     return tr;
   }).join("");
@@ -461,7 +504,7 @@ function renderMethod(box,m){
     let tr=`<tr class="row" data-t="${esc(o.ticker)}" tabindex="0" aria-expanded="${openTicker===o.ticker}">${stockCell(o)}
       <td><div class="score"><span class="num" style="min-width:30px">${p.ok}/${n}</span><span class="bar"><i class="${cls}" style="width:${pct}%"></i></span></div></td>
       <td><div class="pips">${p.res.map(r=>`<span class="pip ${r.pass===true?"y":r.pass===null?"na":""}"></span>`).join("")}</div></td>
-      ${stCell(plan(o)[kind],kind)}
+      ${stCell(plan(o)[kind],kind,o)}
       ${m.cols.map(k=>`<td class="num">${fmt(k,val(o,k))}</td>`).join("")}</tr>`;
     if(openTicker===o.ticker) tr+=`<tr class="detail"><td colspan="${4+m.cols.length}">${detailAll(e)}</td></tr>`;
     return tr;

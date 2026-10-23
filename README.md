@@ -15,6 +15,7 @@ Data diperbarui otomatis setiap **Selasa–Sabtu pukul 06.00 WIB** oleh GitHub A
 - **Investor**: nilai wajar = P/E median sektor (dibatasi 10–30) × EPS, dirata-rata dengan angka Graham bila relevan. Beli di bawah nilai wajar dikurangi *margin of safety* (default 25%), jual di atas nilai wajar ditambah premi (default 20%). Saham dengan EPS negatif tidak dinilai.
 - **Trader**: area masuk di SMA20 (pullback) atau 52W high (breakout), stop loss 8%, target 25%. Jual bila harga di bawah SMA50/SMA200 atau target tercapai.
 - Persentase bisa diubah di website dan tersimpan di browser.
+- **Kapan beli / jual**: sinyal trader diuji mundur hari demi hari selama setahun dari harga harian (tanggal, harga, alasan jual, hasil). Status investor dicatat setiap pembaruan ke `data/signals.json`, sehingga terlihat sejak kapan dan di harga berapa status berubah.
 
 ## Langkah pemasangan (sekali saja)
 

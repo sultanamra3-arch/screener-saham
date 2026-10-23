@@ -25,6 +25,10 @@ ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
 CONST_FILE = DATA / "constituents.json"
 OUT_FILE = DATA / "stocks.json"
+SIG_FILE = DATA / "signals.json"
+
+# Pengaturan default (sama dengan default di website)
+MOS, PREM, STOP, TARGET = 0.25, 0.20, 0.08, 0.25
 
 FINNHUB = "https://finnhub.io/api/v1"
 UA = {"User-Agent": "ScreenerSahamBot/1.2 (https://github.com/sultanamra3-arch/screener-saham; sultanamra3@users.noreply.github.com)"}
@@ -288,7 +292,7 @@ def fetch_prices(tickers: list[str]):
         chunk = syms[i : i + 100]
         for attempt in range(3):
             try:
-                df = yf.download(chunk, period="13mo", interval="1d", auto_adjust=True,
+                df = yf.download(chunk, period="2y", interval="1d", auto_adjust=True,
                                  progress=False, threads=True, group_by="column")
                 close = df["Close"] if "Close" in df else None
                 if close is not None and not close.empty:
@@ -403,6 +407,102 @@ def clean(d: dict) -> dict:
     return out
 
 
+# ---------------------------------------------------------------- sinyal trader (uji mundur 1 tahun)
+REASON = {"stop": "kena stop loss", "target": "target tercapai", "trend": "tren patah (di bawah SMA50)"}
+
+
+def backtest_trader(s) -> dict | None:
+    """Jalankan aturan trader hari demi hari selama ~1 tahun terakhir.
+
+    Beli: tren naik (harga > SMA200 dan SMA50 > SMA200), harga >= SMA50, dan harga di
+    area masuk: pullback ke SMA20 (maks. +3% di atasnya) atau breakout dekat 52W high.
+    Jual: kena stop loss (-8%), target tercapai (+25%), atau harga < SMA50.
+    """
+    import pandas as pd
+
+    s = s.dropna()
+    if len(s) < 260:
+        return None
+    sma20, sma50, sma200 = s.rolling(20).mean(), s.rolling(50).mean(), s.rolling(200).mean()
+    hi = s.rolling(252, min_periods=120).max()
+    start = s.index[-1] - pd.Timedelta(days=365)
+    trades, pos = [], None
+    for d in s.index[s.index > start]:
+        p, a20, a50, a200, h = float(s[d]), sma20[d], sma50[d], sma200[d], hi[d]
+        if any(pd.isna(x) for x in (a20, a50, a200)):
+            continue
+        day = d.strftime("%Y-%m-%d")
+        if pos is None:
+            up = p > a200 and a50 > a200 and p >= a50
+            breakout = not pd.isna(h) and p >= h * 0.98
+            entry = float(h) if breakout else float(a20)
+            if up and entry * (1 - STOP) <= p <= entry * 1.03:
+                pos = {"b": day, "bp": round(p, 2), "why": "breakout" if breakout else "pullback"}
+        else:
+            reason = None
+            if p <= pos["bp"] * (1 - STOP):
+                reason = "stop"
+            elif p >= pos["bp"] * (1 + TARGET):
+                reason = "target"
+            elif p < a50:
+                reason = "trend"
+            if reason:
+                trades.append({**pos, "s": day, "sp": round(p, 2), "r": reason,
+                               "ret": round((p / pos["bp"] - 1) * 100, 2)})
+                pos = None
+    last = float(s.iloc[-1])
+    if pos is not None:
+        trades.append({**pos, "s": None, "sp": None, "r": None, "ret": round((last / pos["bp"] - 1) * 100, 2)})
+    closed = [t for t in trades if t["s"]]
+    return {
+        "n": len(closed),
+        "win": sum(1 for t in closed if t["ret"] > 0),
+        "avg": round(sum(t["ret"] for t in closed) / len(closed), 2) if closed else None,
+        "open": pos is not None,
+        "trades": trades[-8:],
+    }
+
+
+# ---------------------------------------------------------------- status investor (dicatat harian)
+def investor_status(rows: list[dict]) -> dict:
+    by = {}
+    for r in rows:
+        pe = r.get("pe")
+        if isinstance(pe, (int, float)) and 0 < pe < 200 and r.get("sector"):
+            by.setdefault(r["sector"], []).append(pe)
+    fpe = {k: min(30, max(10, sorted(v)[len(v) // 2])) for k, v in by.items()}
+    out = {}
+    for r in rows:
+        price, pe, pb = r.get("price"), r.get("pe"), r.get("pb")
+        eps = r.get("eps") if r.get("eps") is not None else (price / pe if price and pe and pe > 0 else None)
+        bvps = r.get("bvps") if r.get("bvps") is not None else (price / pb if price and pb and pb > 0 else None)
+        if not price or not eps or eps <= 0:
+            out[r["ticker"]] = "na"
+            continue
+        fv_pe = fpe.get(r.get("sector"), 18) * eps
+        graham = math.sqrt(22.5 * eps * bvps) if bvps and bvps > 0 else None
+        fv = (fv_pe + graham) / 2 if graham and graham >= fv_pe * 0.6 else fv_pe
+        out[r["ticker"]] = "buy" if price <= fv * (1 - MOS) else "sell" if price >= fv * (1 + PREM) else "wait"
+    return out
+
+
+def update_investor_history(rows: list[dict], day: str):
+    hist = json.loads(SIG_FILE.read_text()) if SIG_FILE.exists() else {}
+    status = investor_status(rows)
+    for r in rows:
+        t, st = r["ticker"], status.get(r["ticker"], "na")
+        h = hist.get(t)
+        if h is None:
+            h = {"s": st, "since": day, "px": r.get("price"), "first": True, "log": []}
+        elif h["s"] != st:
+            h["log"] = (h.get("log", []) + [{"s": h["s"], "since": h["since"], "px": h["px"], "until": day}])[-12:]
+            h.update({"s": st, "since": day, "px": r.get("price"), "first": False})
+        hist[t] = h
+        r["invSig"] = {k: h[k] for k in ("s", "since", "px", "first")}
+        r["invLog"] = h.get("log", [])[-6:]
+    SIG_FILE.write_text(json.dumps(hist, separators=(",", ":")))
+
+
 def build(const: dict, metrics: dict, prices) -> list[dict]:
     rows = []
     for s in const["stocks"]:
@@ -413,6 +513,11 @@ def build(const: dict, metrics: dict, prices) -> list[dict]:
         tech = technicals(prices[t]) if prices is not None and t in prices else {}
         for k, v in tech.items():
             row[k] = v
+        if prices is not None and t in prices:
+            try:
+                row["trSig"] = backtest_trader(prices[t])
+            except Exception as e:
+                log(f"  sinyal {t}: {e}")
         # cadangan dari Finnhub bila harga harian kosong
         if row.get("perf6m") is None:
             row["perf6m"] = f.get("_perf6m")
@@ -460,6 +565,8 @@ def main():
         log("  Harga harian gagal; SMA, RSI, dan 52W high akan kosong hari ini")
 
     rows = build(const, metrics, prices)
+    day = prices.index[-1].strftime("%Y-%m-%d") if prices is not None else datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    update_investor_history(rows, day)
     out = {
         "updatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "constituentsUpdatedAt": const["updatedAt"],
@@ -471,6 +578,7 @@ def main():
         },
         "count": len(rows),
         "missingFundamentals": missing,
+        "priceDate": day,
         "stocks": rows,
         "etf": etf_info(prices),
     }
