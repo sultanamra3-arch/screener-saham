@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-10-23T04:36:24+00:00",
+ "updatedAt": "2026-10-23T07:26:27+00:00",
  "stocks": [
   {
    "ticker": "A",
@@ -14,7 +14,8 @@
    "company": "Apple Inc.",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -30,7 +31,8 @@
    "company": "Airbnb",
    "sector": "Consumer Discretionary",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -62,7 +64,8 @@
    "company": "Adobe Inc.",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -70,7 +73,8 @@
    "company": "Analog Devices",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -86,7 +90,8 @@
    "company": "Automatic Data Processing",
    "sector": "Industrials",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -94,7 +99,8 @@
    "company": "Autodesk",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -110,7 +116,8 @@
    "company": "American Electric Power",
    "sector": "Utilities",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -162,6 +169,14 @@
    ]
   },
   {
+   "ticker": "ALAB",
+   "company": "Astera Labs, Inc. Common Stock",
+   "sector": "",
+   "idx": [
+    "NDX"
+   ]
+  },
+  {
    "ticker": "ALB",
    "company": "Albemarle Corporation",
    "sector": "Materials",
@@ -194,11 +209,20 @@
    ]
   },
   {
+   "ticker": "ALNY",
+   "company": "Alnylam Pharmaceuticals, Inc. Common Stock",
+   "sector": "",
+   "idx": [
+    "NDX"
+   ]
+  },
+  {
    "ticker": "AMAT",
    "company": "Applied Materials",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -214,7 +238,8 @@
    "company": "Advanced Micro Devices",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -230,7 +255,8 @@
    "company": "Amgen",
    "sector": "Health Care",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -254,7 +280,8 @@
    "company": "Amazon",
    "sector": "Consumer Discretionary",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -318,7 +345,8 @@
    "company": "AppLovin",
    "sector": "Communication Services",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -346,6 +374,22 @@
    ]
   },
   {
+   "ticker": "ARM",
+   "company": "Arm Holdings plc American Depositary Shares",
+   "sector": "",
+   "idx": [
+    "NDX"
+   ]
+  },
+  {
+   "ticker": "ASML",
+   "company": "ASML Holding N.V. New York Registry Shares",
+   "sector": "",
+   "idx": [
+    "NDX"
+   ]
+  },
+  {
    "ticker": "ATO",
    "company": "Atmos Energy",
    "sector": "Utilities",
@@ -358,7 +402,8 @@
    "company": "Broadcom",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -382,7 +427,8 @@
    "company": "Axon Enterprise",
    "sector": "Industrials",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -494,7 +540,8 @@
    "company": "Booking Holdings",
    "sector": "Consumer Discretionary",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -502,7 +549,8 @@
    "company": "Baker Hughes",
    "sector": "Energy",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -642,6 +690,14 @@
    ]
   },
   {
+   "ticker": "CCEP",
+   "company": "Coca-Cola Europacific Partners plc Ordinary Shares",
+   "sector": "",
+   "idx": [
+    "NDX"
+   ]
+  },
+  {
    "ticker": "CCI",
    "company": "Crown Castle",
    "sector": "Real Estate",
@@ -662,7 +718,8 @@
    "company": "Cadence Design Systems",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -678,7 +735,8 @@
    "company": "Constellation Energy",
    "sector": "Utilities",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -766,7 +824,8 @@
    "company": "Comcast",
    "sector": "Communication Services",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -870,7 +929,8 @@
    "company": "Costco",
    "sector": "Consumer Staples",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -886,7 +946,8 @@
    "company": "Copart",
    "sector": "Industrials",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -926,7 +987,16 @@
    "company": "CrowdStrike",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
+   ]
+  },
+  {
+   "ticker": "CRWV",
+   "company": "CoreWeave, Inc. Class A Common Stock",
+   "sector": "",
+   "idx": [
+    "NDX"
    ]
   },
   {
@@ -934,7 +1004,8 @@
    "company": "Cisco",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -950,7 +1021,8 @@
    "company": "CSX Corporation",
    "sector": "Industrials",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -958,7 +1030,8 @@
    "company": "Cintas",
    "sector": "Industrials",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -1014,7 +1087,8 @@
    "company": "DoorDash",
    "sector": "Consumer Discretionary",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -1030,7 +1104,8 @@
    "company": "Datadog",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -1190,7 +1265,8 @@
    "company": "Dexcom",
    "sector": "Health Care",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -1366,7 +1442,8 @@
    "company": "Exelon",
    "sector": "Utilities",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -1414,7 +1491,8 @@
    "company": "Diamondback Energy",
    "sector": "Energy",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -1422,7 +1500,8 @@
    "company": "Fastenal",
    "sector": "Industrials",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -1463,6 +1542,14 @@
    "sector": "Utilities",
    "idx": [
     "SP500"
+   ]
+  },
+  {
+   "ticker": "FER",
+   "company": "Ferrovial N.V. Ordinary Shares",
+   "sector": "",
+   "idx": [
+    "NDX"
    ]
   },
   {
@@ -1566,7 +1653,8 @@
    "company": "Fortinet",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -1606,7 +1694,8 @@
    "company": "GE HealthCare",
    "sector": "Health Care",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -1630,7 +1719,8 @@
    "company": "Gilead Sciences",
    "sector": "Health Care",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -1678,7 +1768,8 @@
    "company": "Alphabet Inc. (Class C)",
    "sector": "Communication Services",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -1686,7 +1777,8 @@
    "company": "Alphabet Inc. (Class A)",
    "sector": "Communication Services",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -1798,7 +1890,8 @@
    "company": "Honeywell Technologies",
    "sector": "Industrials",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -1806,7 +1899,8 @@
    "company": "Honeywell Aerospace",
    "sector": "Industrials",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -1918,7 +2012,8 @@
    "company": "Idexx Laboratories",
    "sector": "Health Care",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -1958,7 +2053,8 @@
    "company": "Intel",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -1966,7 +2062,8 @@
    "company": "Intuit",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -2014,7 +2111,8 @@
    "company": "Intuitive Surgical",
    "sector": "Health Care",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -2102,7 +2200,8 @@
    "company": "Keurig Dr Pepper",
    "sector": "Consumer Staples",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -2150,7 +2249,8 @@
    "company": "KLA Corporation",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -2246,7 +2346,8 @@
    "company": "Linde plc",
    "sector": "Materials",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -2254,7 +2355,8 @@
    "company": "Lumentum",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -2294,7 +2396,8 @@
    "company": "Lam Research",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -2358,7 +2461,8 @@
    "company": "Marriott International",
    "sector": "Consumer Discretionary",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -2382,7 +2486,8 @@
    "company": "Microchip Technology",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -2406,7 +2511,8 @@
    "company": "Mondelez International",
    "sector": "Consumer Staples",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -2415,6 +2521,14 @@
    "sector": "Health Care",
    "idx": [
     "SP500"
+   ]
+  },
+  {
+   "ticker": "MELI",
+   "company": "MercadoLibre, Inc. Common Stock",
+   "sector": "",
+   "idx": [
+    "NDX"
    ]
   },
   {
@@ -2430,7 +2544,8 @@
    "company": "Meta Platforms",
    "sector": "Communication Services",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -2470,7 +2585,8 @@
    "company": "Monster Beverage",
    "sector": "Consumer Staples",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -2502,7 +2618,8 @@
    "company": "Monolithic Power Systems",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -2518,7 +2635,8 @@
    "company": "Moderna",
    "sector": "Health Care",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -2534,7 +2652,8 @@
    "company": "Marvell Technology",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -2558,7 +2677,8 @@
    "company": "Microsoft",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -2567,6 +2687,14 @@
    "sector": "Information Technology",
    "idx": [
     "SP500"
+   ]
+  },
+  {
+   "ticker": "MSTR",
+   "company": "Strategy Inc Common Stock Class A",
+   "sector": "",
+   "idx": [
+    "NDX"
    ]
   },
   {
@@ -2590,7 +2718,16 @@
    "company": "Micron Technology",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
+   ]
+  },
+  {
+   "ticker": "NBIS",
+   "company": "Nebius Group N.V. Class A Ordinary Shares",
+   "sector": "",
+   "idx": [
+    "NDX"
    ]
   },
   {
@@ -2638,7 +2775,8 @@
    "company": "Netflix",
    "sector": "Communication Services",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -2718,7 +2856,8 @@
    "company": "Nvidia",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -2750,7 +2889,8 @@
    "company": "NXP Semiconductors",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -2766,7 +2906,8 @@
    "company": "Old Dominion",
    "sector": "Industrials",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -2806,7 +2947,8 @@
    "company": "O'Reilly Automotive",
    "sector": "Consumer Discretionary",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -2838,7 +2980,8 @@
    "company": "Palo Alto Networks",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -2846,7 +2989,8 @@
    "company": "Paychex",
    "sector": "Industrials",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -2854,7 +2998,8 @@
    "company": "Paccar",
    "sector": "Industrials",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -2863,6 +3008,14 @@
    "sector": "Utilities",
    "idx": [
     "SP500"
+   ]
+  },
+  {
+   "ticker": "PDD",
+   "company": "PDD Holdings Inc. American Depositary Shares",
+   "sector": "",
+   "idx": [
+    "NDX"
    ]
   },
   {
@@ -2878,7 +3031,8 @@
    "company": "PepsiCo",
    "sector": "Consumer Staples",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -2950,7 +3104,8 @@
    "company": "Palantir Technologies",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -3054,7 +3209,8 @@
    "company": "PayPal",
    "sector": "Financials",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -3070,7 +3226,8 @@
    "company": "Qualcomm",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -3102,7 +3259,8 @@
    "company": "Regeneron Pharmaceuticals",
    "sector": "Health Care",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -3119,6 +3277,14 @@
    "sector": "Financials",
    "idx": [
     "SP500"
+   ]
+  },
+  {
+   "ticker": "RKLB",
+   "company": "Rocket Lab Corporation Common Stock",
+   "sector": "",
+   "idx": [
+    "NDX"
    ]
   },
   {
@@ -3158,7 +3324,8 @@
    "company": "Roper Technologies",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -3166,7 +3333,8 @@
    "company": "Ross Stores",
    "sector": "Consumer Discretionary",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -3206,7 +3374,8 @@
    "company": "Starbucks",
    "sector": "Consumer Discretionary",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -3215,6 +3384,14 @@
    "sector": "Financials",
    "idx": [
     "SP500"
+   ]
+  },
+  {
+   "ticker": "SHOP",
+   "company": "Shopify Inc. Class A Subordinate Voting Shares",
+   "sector": "",
+   "idx": [
+    "NDX"
    ]
   },
   {
@@ -3270,7 +3447,8 @@
    "company": "Sandisk",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -3278,7 +3456,8 @@
    "company": "Synopsys",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -3295,6 +3474,14 @@
    "sector": "Health Care",
    "idx": [
     "SP500"
+   ]
+  },
+  {
+   "ticker": "SPCX",
+   "company": "Space Exploration Technologies Corp. Class A Common Stock",
+   "sector": "",
+   "idx": [
+    "NDX"
    ]
   },
   {
@@ -3350,7 +3537,8 @@
    "company": "Seagate Technology",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -3454,7 +3642,8 @@
    "company": "Teradyne",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -3502,7 +3691,8 @@
    "company": "T-Mobile US",
    "sector": "Communication Services",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -3527,6 +3717,14 @@
    "sector": "Energy",
    "idx": [
     "SP500"
+   ]
+  },
+  {
+   "ticker": "TRI",
+   "company": "Thomson Reuters Corporation Common Shares",
+   "sector": "",
+   "idx": [
+    "NDX"
    ]
   },
   {
@@ -3566,7 +3764,8 @@
    "company": "Tesla, Inc.",
    "sector": "Consumer Discretionary",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -3590,7 +3789,8 @@
    "company": "Take-Two Interactive",
    "sector": "Communication Services",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -3606,7 +3806,8 @@
    "company": "Texas Instruments",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -3790,7 +3991,8 @@
    "company": "Vertex Pharmaceuticals",
    "sector": "Health Care",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -3854,7 +4056,8 @@
    "company": "Workday, Inc.",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -3862,7 +4065,8 @@
    "company": "Western Digital",
    "sector": "Information Technology",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -3910,7 +4114,8 @@
    "company": "Walmart",
    "sector": "Consumer Staples",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -3966,7 +4171,8 @@
    "company": "Xcel Energy",
    "sector": "Utilities",
    "idx": [
-    "SP500"
+    "SP500",
+    "NDX"
    ]
   },
   {
@@ -4026,5 +4232,5 @@
    ]
   }
  ],
- "hasNdx": false
+ "hasNdx": true
 }
