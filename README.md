@@ -10,6 +10,12 @@ Data diperbarui otomatis setiap **Selasa–Sabtu pukul 06.00 WIB** oleh GitHub A
 | Harga harian (SMA, RSI, kinerja, 52W high) | Yahoo Finance lewat `yfinance` |
 | Daftar anggota indeks (diperbarui tiap 30 hari) | Wikipedia |
 
+## Harga beli / tunggu / jual
+
+- **Investor**: nilai wajar = P/E median sektor (dibatasi 10–30) × EPS, dirata-rata dengan angka Graham bila relevan. Beli di bawah nilai wajar dikurangi *margin of safety* (default 25%), jual di atas nilai wajar ditambah premi (default 20%). Saham dengan EPS negatif tidak dinilai.
+- **Trader**: area masuk di SMA20 (pullback) atau 52W high (breakout), stop loss 8%, target 25%. Jual bila harga di bawah SMA50/SMA200 atau target tercapai.
+- Persentase bisa diubah di website dan tersimpan di browser.
+
 ## Langkah pemasangan (sekali saja)
 
 1. **Simpan API key Finnhub**

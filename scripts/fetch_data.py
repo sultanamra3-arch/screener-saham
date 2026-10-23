@@ -242,6 +242,8 @@ def from_metric(m: dict) -> dict:
         "epsTTM": first(m, "epsGrowthTTMYoy"),
         "epsQ": first(m, "epsGrowthQuarterlyYoy"),
         "salesQ": first(m, "revenueGrowthQuarterlyYoy"),
+        "eps": first(m, "epsTTM", "epsExclExtraItemsTTM", "epsBasicExclExtraItemsTTM", "epsInclExtraItemsTTM"),
+        "bvps": first(m, "bookValuePerShareQuarterly", "bookValuePerShareAnnual"),
         "beta": first(m, "beta"),
         "relSP": first(m, "priceRelativeToS&P50052Week"),
         # cadangan jika data harga harian gagal

@@ -111,6 +111,13 @@ tbody tr:last-child td{border-bottom:none}
 .dl div{display:flex;justify-content:space-between;gap:8px}
 .ok{color:var(--good)} .no{color:var(--bad)} .na{color:var(--muted)}
 .empty{padding:28px;text-align:center;color:var(--muted)}
+.st{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.st.buy{background:var(--good);color:var(--accent-ink)} .st.wait{background:var(--warn-soft);color:var(--warn)}
+.st.sell{background:var(--bad-soft);color:var(--bad)} .st.na{background:var(--sunk);color:var(--muted)}
+.lvl{display:block;font-size:12px;color:var(--muted);font-family:var(--f-mono);white-space:nowrap;margin-top:2px}
+.params{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 14px;font-size:14px}
+.params label{display:flex;align-items:center;gap:6px}
+.params input{width:64px;text-align:right;font-family:var(--f-mono);font-size:13px}
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted);align-items:center}
 .legend span{display:inline-flex;align-items:center;gap:5px}
 
@@ -240,6 +247,91 @@ function filtered(){
   return rows.filter(o=>(ixFilter==="ALL"||(o.idx||[]).includes(ixFilter)) && (!sec||o.sector===sec) &&
     (!q || (o.ticker+" "+(o.company||"")).toLowerCase().includes(q)));
 }
+// ---------- harga beli / tunggu / jual ----------
+const PARAMS_DEF = {mos:25, prem:20, stop:8, target:25};
+let params = {...PARAMS_DEF}; try{ Object.assign(params, JSON.parse(store.get("ss.params")||"{}")) }catch(e){}
+let sectorPE = {}, planCache = new Map();
+function buildSectorPE(){
+  const by = {};
+  rows.forEach(o=>{ if(o.pe>0 && o.pe<200 && o.sector) (by[o.sector]=by[o.sector]||[]).push(o.pe) });
+  sectorPE = {};
+  Object.entries(by).forEach(([k,a])=>{ a.sort((x,y)=>x-y); const med=a[Math.floor(a.length/2)]; sectorPE[k]=Math.min(30,Math.max(10,med)); });
+}
+const lvl = (price,pct) => (price!=null && pct!=null && pct>-100) ? price/(1+pct/100) : null;
+function plan(o){
+  let p = planCache.get(o.ticker); if(p) return p;
+  const price = o.price;
+  // investor: nilai wajar
+  const eps = (o.eps!=null) ? o.eps : (price && o.pe>0 ? price/o.pe : null);
+  const bvps = (o.bvps!=null) ? o.bvps : (price && o.pb>0 ? price/o.pb : null);
+  const inv = {status:"na", why:""};
+  if(price==null){ inv.why="Harga tidak tersedia"; }
+  else if(eps==null || eps<=0){ inv.why="Laba (EPS) negatif atau tidak ada, nilai wajar tidak bisa dihitung"; }
+  else {
+    const fpe = sectorPE[o.sector] || 18;
+    inv.fpe = fpe; inv.eps = eps; inv.bvps = bvps;
+    inv.fvPE = fpe*eps;
+    inv.graham = (bvps>0) ? Math.sqrt(22.5*eps*bvps) : null;
+    // Graham sangat konservatif untuk bisnis ber-ROE tinggi (P/B besar); dipakai hanya bila tidak terlalu jauh dari nilai P/E
+    inv.useGraham = !!(inv.graham && inv.graham >= inv.fvPE*0.6);
+    inv.fv = inv.useGraham ? (inv.fvPE+inv.graham)/2 : inv.fvPE;
+    inv.buy = inv.fv*(1-params.mos/100); inv.sell = inv.fv*(1+params.prem/100);
+    inv.status = price<=inv.buy ? "buy" : price>=inv.sell ? "sell" : "wait";
+    inv.gap = (price/inv.fv-1)*100;
+  }
+  // trader: tren
+  const tr = {status:"na", why:""};
+  const s20=lvl(price,o.sma20), s50=lvl(price,o.sma50), s200=lvl(price,o.sma200), hi=lvl(price,o.hi52);
+  if(price==null || s20==null || s50==null || s200==null){ tr.why="Data harga harian (SMA) tidak tersedia"; }
+  else {
+    Object.assign(tr,{s20,s50,s200,hi});
+    const up = price>s200 && s50>s200;
+    const breakout = hi!=null && price>=hi*0.98;
+    tr.entry = breakout ? hi : s20;
+    tr.setup = breakout ? "breakout 52W high" : "pullback ke SMA20";
+    tr.stop = tr.entry*(1-params.stop/100);
+    tr.target = tr.entry*(1+params.target/100);
+    if(price<s50 || price<s200){ tr.status="sell"; tr.why = price<s200 ? "Di bawah SMA200: tren besar turun" : "Di bawah SMA50: tren menengah patah"; }
+    else if(price>=tr.target){ tr.status="sell"; tr.why="Sudah mencapai target"; }
+    else if(up && price>=tr.stop && price<=tr.entry*1.03){ tr.status="buy"; tr.why="Tren naik, harga di area "+tr.setup; }
+    else { tr.status="wait"; tr.why = !up ? "SMA50 belum di atas SMA200" : "Harga sudah jauh dari area masuk, tunggu pullback"; }
+  }
+  p = {inv,tr}; planCache.set(o.ticker,p); return p;
+}
+const ST = {buy:"Beli",wait:"Tunggu",sell:"Jual",na:"Tidak dinilai"};
+const usd = v => v==null||!isFinite(v) ? "–" : "$"+(v>=1000? v.toFixed(0) : v.toFixed(2));
+function stCell(x, kind){
+  const sub = x.status==="na" ? "" : kind==="inv" ? `beli ≤ ${usd(x.buy)} · jual ≥ ${usd(x.sell)}` : `masuk ${usd(x.entry)} · stop ${usd(x.stop)}`;
+  return `<td><span class="st ${x.status}" title="${esc(x.why||"")}">${ST[x.status]}</span>${sub?`<span class="lvl">${sub}</span>`:""}</td>`;
+}
+function planDetail(o){
+  const {inv,tr}=plan(o);
+  const row=(a,b,c="")=>`<div><span>${a}</span><span class="num ${c}">${b}</span></div>`;
+  let h=`<div><h4><span>Investor (nilai wajar)</span><span class="st ${inv.status}">${ST[inv.status]}</span></h4><div class="dl">`;
+  if(inv.status==="na") h+=`<div><span class="na">${esc(inv.why)}</span></div>`;
+  else h+=row("Harga sekarang",usd(o.price))+row("EPS 12 bulan",usd(inv.eps))+row("P/E wajar (median sektor, 10–30)",inv.fpe.toFixed(1))+row("Nilai wajar dari P/E",usd(inv.fvPE))
+    +row("Angka Graham √(22,5×EPS×BVPS)",usd(inv.graham)+(inv.graham&&!inv.useGraham?" (tidak dipakai)":""))+row(inv.useGraham?"<b>Nilai wajar (rata-rata keduanya)</b>":"<b>Nilai wajar (dari P/E)</b>","<b>"+usd(inv.fv)+"</b>")
+    +row(`Harga beli (diskon ${params.mos}%)`,usd(inv.buy),"ok")+row(`Harga jual (premi ${params.prem}%)`,usd(inv.sell),"no")
+    +row("Harga vs nilai wajar",(inv.gap>0?"+":"")+inv.gap.toFixed(1)+"%");
+  h+=`</div></div><div><h4><span>Trader (tren)</span><span class="st ${tr.status}">${ST[tr.status]}</span></h4><div class="dl">`;
+  if(tr.status==="na" && tr.entry==null) h+=`<div><span class="na">${esc(tr.why)}</span></div>`;
+  else h+=row("Harga sekarang",usd(o.price))+row("SMA20 / SMA50",usd(tr.s20)+" / "+usd(tr.s50))+row("SMA200",usd(tr.s200))+row("52W high",usd(tr.hi))
+    +row(`Area masuk (${tr.setup})`,usd(tr.entry),"ok")+row(`Stop loss (−${params.stop}%)`,usd(tr.stop),"no")+row(`Target (+${params.target}%)`,usd(tr.target))
+    +`<div><span class="na">${esc(tr.why)}</span></div>`;
+  return h+`</div></div>`;
+}
+function paramsBar(){
+  const f=(id,label,v)=>`<label for="pp-${id}">${label} <input type="number" step="any" id="pp-${id}" data-k="${id}" value="${v}">%</label>`;
+  return `<div class="params" id="params"><b style="font-weight:600">Patokan harga</b>${f("mos","Margin of safety",params.mos)}${f("prem","Premi jual",params.prem)}${f("stop","Stop loss",params.stop)}${f("target","Target",params.target)}<button type="button" id="ppReset">Default</button></div>`;
+}
+function bindParams(){
+  const box=$("params"); if(!box) return;
+  box.querySelectorAll("input").forEach(inp=>inp.addEventListener("change",()=>{
+    const v=parseFloat(inp.value); if(isFinite(v)&&v>=0&&v<100){ params[inp.dataset.k]=v; store.set("ss.params",JSON.stringify(params)); planCache.clear(); renderResults(); }
+  }));
+  $("ppReset").addEventListener("click",()=>{ params={...PARAMS_DEF}; store.set("ss.params","{}"); planCache.clear(); renderResults(); });
+}
+
 function style(e){
   const p = M.filter(m=>e.per[m.id].full).map(m=>m.name);
   if(p.length) return p.join(" + ");
@@ -309,6 +401,7 @@ function detailAll(e){
   return `<div class="dgrid">${M.map(m=>{ const p=e.per[m.id];
     return `<div><h4><span>${esc(m.name)}</span><span class="num ${p.full?"ok":p.ok/p.n>=.5?"":"no"}">${p.ok}/${p.n}</span></h4><div class="dl">${m.crit.map((c,i)=>{const r=p.res[i];
       return `<div><span>${esc(c[3])} ${opTxt(c[1])} ${r.t}</span><span class="num ${r.pass===true?"ok":r.pass===null?"na":"no"}">${r.pass===null?"tidak ada":fmt(c[0],r.v)}</span></div>`}).join("")}</div></div>`;}).join("")}
+    ${planDetail(e.o)}
     <div><h4><span>Lainnya</span></h4><div class="dl">${["price","mcap","beta","perf1m","perfYtd"].map(k=>`<div><span>${k==="perfYtd"?"Sejak awal tahun":k==="beta"?"Beta":SHORT[k]}</span><span class="num">${fmt(k==="perfYtd"?"perf1y":k,val(e.o,k))}</span></div>`).join("")}</div></div></div>`;
 }
 
@@ -318,24 +411,32 @@ function renderSummary(box){
   const total = list.length;
   const dist = [0,0,0,0,0,0,0,0]; list.forEach(e=>dist[e.passed]++);
   if(minSel) list = list.filter(e=>e.passed>=minSel);
-  box.innerHTML = `<div class="rhead"><div class="l"><h2>Gabungan 7 metode per saham</h2>
+  const stSel = store.get("ss.st")||"";
+  if(stSel){ const [k,v]=stSel.split(":"); list = list.filter(e=>plan(e.o)[k].status===v); }
+  const nInvBuy = filtered().filter(o=>plan(o).inv.status==="buy").length, nTrBuy = filtered().filter(o=>plan(o).tr.status==="buy").length;
+  box.innerHTML = paramsBar() + `<div class="rhead"><div class="l"><h2>Gabungan 7 metode per saham</h2>
       <p class="note">Diurutkan dari jumlah metode yang lolos penuh, lalu skor gabungan (rata-rata persentase kriteria terpenuhi). ${dist.slice(3).reduce((a,b)=>a+b,0)} dari ${total} saham lolos 3 metode atau lebih.</p></div>
-      <label for="minPass">Minimal lolos <select id="minPass">${[0,1,2,3,4,5].map(n=>`<option value="${n}" ${n===minSel?"selected":""}>${n===0?"Semua":n+" metode"}</option>`).join("")}</select></label></div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px"><label for="stSel">Status <select id="stSel">${[["","Semua"],["inv:buy",`Investor: Beli (${nInvBuy})`],["inv:sell","Investor: Jual"],["tr:buy",`Trader: Beli (${nTrBuy})`],["tr:sell","Trader: Jual"]].map(([v,t])=>`<option value="${v}" ${v===stSel?"selected":""}>${t}</option>`).join("")}</select></label>
+      <label for="minPass">Minimal lolos <select id="minPass">${[0,1,2,3,4,5].map(n=>`<option value="${n}" ${n===minSel?"selected":""}>${n===0?"Semua":n+" metode"}</option>`).join("")}</select></label></div></div>
     <div class="legend">${M.map(m=>`<span><span class="mc pass" style="width:20px;height:18px">${m.abbr}</span>${esc(m.name)}</span>`).join("")}
       <span><span class="mc pass" style="width:14px;height:14px"></span>lolos</span><span><span class="mc part" style="width:14px;height:14px"></span>sebagian (≥50%)</span><span><span class="mc" style="width:14px;height:14px"></span>gagal</span><span><span class="mc na" style="width:14px;height:14px"></span>tanpa data</span></div>
-    <div class="tablebox"><table><thead><tr><th>Saham</th><th class="num">Lolos</th><th>Skor gabungan</th><th>Status per metode</th><th>Gaya dominan</th><th class="num">Mkt cap</th><th class="num">1 thn</th></tr></thead><tbody id="tb"></tbody></table></div>
-    <p class="note">Klik baris untuk melihat semua kriteria dari 7 metode. Beberapa metode saling bertolak belakang (Value dan Momentum jarang lolos bersamaan), jadi lolos 3–4 metode sudah termasuk kuat.</p>`;
+    <div class="tablebox"><table><thead><tr><th>Saham</th><th class="num">Harga</th><th class="num">Lolos</th><th>Skor gabungan</th><th>Status per metode</th><th>Investor</th><th>Trader</th><th>Gaya dominan</th></tr></thead><tbody id="tb"></tbody></table></div>
+    <p class="note">Klik baris untuk melihat semua kriteria dan cara hitung harga patokan. <b>Investor</b> memakai nilai wajar (P/E median sektor × EPS, dirata-rata dengan angka Graham bila relevan); <b>Trader</b> memakai tren SMA dengan stop loss dan target. Jual berarti jual bila sudah punya, hindari bila belum. Beberapa metode saling bertolak belakang (Value dan Momentum jarang lolos bersamaan), jadi lolos 3–4 metode sudah termasuk kuat.</p>`;
   $("minPass").addEventListener("change",ev=>{ store.set("ss.min",ev.target.value); renderResults(); });
+  $("stSel").addEventListener("change",ev=>{ store.set("ss.st",ev.target.value); renderResults(); });
+  bindParams();
   const tb=$("tb");
-  if(!list.length){ tb.innerHTML=`<tr><td colspan="7" class="empty">${emptyMsg()||"Tidak ada saham yang cocok dengan filter ini."}</td></tr>`; return; }
+  if(!list.length){ tb.innerHTML=`<tr><td colspan="8" class="empty">${emptyMsg()||"Tidak ada saham yang cocok dengan filter ini."}</td></tr>`; return; }
   tb.innerHTML = list.slice(0,600).map(e=>{
     const pct=Math.round(e.score*100), cls=e.score>=.75?"full":e.score<.4?"low":"";
+    const pl=plan(e.o);
     let tr=`<tr class="row" data-t="${esc(e.o.ticker)}" tabindex="0" aria-expanded="${openTicker===e.o.ticker}">${stockCell(e.o)}
+      <td class="num">${usd(e.o.price)}</td>
       <td class="num"><span class="big">${e.passed}</span><span class="na">/7</span></td>
       <td><div class="score"><span class="num" style="min-width:34px">${pct}</span><span class="bar"><i class="${cls}" style="width:${pct}%"></i></span></div></td>
       <td><div class="mcells">${M.map(m=>{const p=e.per[m.id]; const c=p.na?"na":p.full?"pass":p.score>=.5?"part":""; return `<span class="mc ${c}" title="${esc(m.name)}: ${p.ok}/${p.n}">${m.abbr}</span>`}).join("")}</div></td>
-      <td>${esc(style(e))}</td><td class="num">${fmt("mcap",e.o.mcap)}</td><td class="num">${fmt("perf1y",e.o.perf1y)}</td></tr>`;
-    if(openTicker===e.o.ticker) tr+=`<tr class="detail"><td colspan="7">${detailAll(e)}</td></tr>`;
+      ${stCell(pl.inv,"inv")}${stCell(pl.tr,"tr")}<td>${esc(style(e))}</td></tr>`;
+    if(openTicker===e.o.ticker) tr+=`<tr class="detail"><td colspan="8">${detailAll(e)}</td></tr>`;
     return tr;
   }).join("");
 }
@@ -346,20 +447,23 @@ function renderMethod(box,m){
   const full = list.filter(x=>x.e.per[m.id].full).length, total=list.length;
   if(only) list = list.filter(x=>x.e.per[m.id].full);
   const n=m.crit.length;
-  box.innerHTML = `<div class="rhead"><div class="l"><h2>${full} dari ${total} saham lolos semua kriteria</h2><p class="note">Diurutkan dari jumlah kriteria ${esc(m.title)} yang terpenuhi.</p></div>
+  const kind = M.indexOf(m)<4 ? "inv" : "tr";
+  box.innerHTML = paramsBar() + `<div class="rhead"><div class="l"><h2>${full} dari ${total} saham lolos semua kriteria</h2><p class="note">Diurutkan dari jumlah kriteria ${esc(m.title)} yang terpenuhi.</p></div>
       <label><input type="checkbox" id="onlyFull" ${only?"checked":""}> Hanya lolos semua</label></div>
-    <div class="tablebox"><table><thead><tr><th>Saham</th><th>Skor</th><th>Kriteria</th>${m.cols.map(k=>`<th class="num">${esc(SHORT[k]||k)}</th>`).join("")}</tr></thead><tbody id="tb"></tbody></table></div>
+    <div class="tablebox"><table><thead><tr><th>Saham</th><th>Skor</th><th>Kriteria</th><th>${kind==="inv"?"Status investor":"Status trader"}</th>${m.cols.map(k=>`<th class="num">${esc(SHORT[k]||k)}</th>`).join("")}</tr></thead><tbody id="tb"></tbody></table></div>
     <p class="note">Klik baris untuk rincian. Kotak hijau = lolos, merah = gagal, putus-putus = data tidak tersedia (dihitung gagal).</p>`;
   $("onlyFull").addEventListener("change",ev=>{ store.set("ss.only",ev.target.checked?"1":"0"); renderResults(); });
+  bindParams();
   const tb=$("tb");
-  if(!list.length){ tb.innerHTML=`<tr><td colspan="${3+m.cols.length}" class="empty">${emptyMsg()||"Belum ada saham yang cocok. Longgarkan ambang di panel kiri, atau matikan &quot;Hanya lolos semua&quot;."}</td></tr>`; return; }
+  if(!list.length){ tb.innerHTML=`<tr><td colspan="${4+m.cols.length}" class="empty">${emptyMsg()||"Belum ada saham yang cocok. Longgarkan ambang di panel kiri, atau matikan &quot;Hanya lolos semua&quot;."}</td></tr>`; return; }
   tb.innerHTML = list.slice(0,600).map(({e,o})=>{ const p=e.per[m.id];
     const pct=Math.round(p.score*100), cls=p.full?"full":p.score<.5?"low":"";
     let tr=`<tr class="row" data-t="${esc(o.ticker)}" tabindex="0" aria-expanded="${openTicker===o.ticker}">${stockCell(o)}
       <td><div class="score"><span class="num" style="min-width:30px">${p.ok}/${n}</span><span class="bar"><i class="${cls}" style="width:${pct}%"></i></span></div></td>
       <td><div class="pips">${p.res.map(r=>`<span class="pip ${r.pass===true?"y":r.pass===null?"na":""}"></span>`).join("")}</div></td>
+      ${stCell(plan(o)[kind],kind)}
       ${m.cols.map(k=>`<td class="num">${fmt(k,val(o,k))}</td>`).join("")}</tr>`;
-    if(openTicker===o.ticker) tr+=`<tr class="detail"><td colspan="${3+m.cols.length}">${detailAll(e)}</td></tr>`;
+    if(openTicker===o.ticker) tr+=`<tr class="detail"><td colspan="${4+m.cols.length}">${detailAll(e)}</td></tr>`;
     return tr;
   }).join("");
 }
@@ -417,7 +521,7 @@ document.querySelectorAll(".seg button").forEach(b=>{
 // ---------- boot ----------
 renderAll();
 fetch("data/stocks.json",{cache:"no-cache"}).then(r=>{ if(!r.ok) throw new Error(r.status); return r.json() }).then(d=>{
-  DATA=d; rows=(d.stocks||[]).filter(s=>s&&s.ticker);
+  DATA=d; rows=(d.stocks||[]).filter(s=>s&&s.ticker); buildSectorPE(); planCache.clear();
   const secs=[...new Set(rows.map(r=>r.sector).filter(Boolean))].sort();
   $("sector").insertAdjacentHTML("beforeend", secs.map(s=>`<option>${esc(s)}</option>`).join(""));
   renderAll();
