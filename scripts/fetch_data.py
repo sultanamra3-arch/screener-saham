@@ -27,7 +27,9 @@ CONST_FILE = DATA / "constituents.json"
 OUT_FILE = DATA / "stocks.json"
 
 FINNHUB = "https://finnhub.io/api/v1"
-UA = {"User-Agent": "screener-saham/1.0 (GitHub Actions; personal use)"}
+UA = {"User-Agent": "screener-saham/1.1 (https://github.com/sultanamra3-arch/screener-saham; personal stock screener) python-requests"}
+SP500_CSV = "https://raw.githubusercontent.com/datasets/s-and-p-500-companies/main/data/constituents.csv"
+WARNINGS: list[str] = []
 ETFS = ["VOO", "SPY", "QQQ"]
 # Cadangan jika Yahoo tidak memberi rasio biaya. Selalu cek situs penerbit.
 ETF_FALLBACK = {
@@ -41,12 +43,21 @@ def log(*a):
     print(*a, flush=True)
 
 
+def summary(md: str):
+    """Tulis ke halaman ringkasan run GitHub Actions (terlihat tanpa membuka log)."""
+    path = os.environ.get("GITHUB_STEP_SUMMARY")
+    if path:
+        with open(path, "a", encoding="utf-8") as f:
+            f.write(md + "\n")
+
+
 # ---------------------------------------------------------------- constituents
 def _read_tables(url: str):
     import pandas as pd
 
-    html = requests.get(url, headers=UA, timeout=60).text
-    return pd.read_html(io.StringIO(html))
+    r = requests.get(url, headers=UA, timeout=60)
+    r.raise_for_status()
+    return pd.read_html(io.StringIO(r.text))
 
 
 def _pick(table, *names):
@@ -57,47 +68,73 @@ def _pick(table, *names):
     return None
 
 
+def _sp500_wikipedia():
+    for t in _read_tables("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"):
+        if _pick(t, "Symbol") is not None and _pick(t, "GICS Sector") is not None:
+            return t
+    raise RuntimeError("tabel S&P 500 tidak ditemukan di halaman Wikipedia")
+
+
+def _sp500_github():
+    import pandas as pd
+
+    r = requests.get(SP500_CSV, headers=UA, timeout=60)
+    r.raise_for_status()
+    return pd.read_csv(io.StringIO(r.text))
+
+
+def _ndx_tables():
+    for url in ("https://en.wikipedia.org/wiki/Nasdaq-100",
+                "https://en.wikipedia.org/api/rest_v1/page/html/Nasdaq-100"):
+        try:
+            for t in _read_tables(url):
+                if _pick(t, "Ticker", "Symbol") is not None and _pick(t, "Company", "Security") is not None and len(t) > 80:
+                    return t
+            log(f"  tabel Nasdaq-100 tidak ditemukan di {url}")
+        except Exception as e:
+            log(f"  Nasdaq-100 dari {url} gagal: {e}")
+    return None
+
+
 def fetch_constituents() -> dict:
     stocks: dict[str, dict] = {}
 
     sp = None
-    for t in _read_tables("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"):
-        if _pick(t, "Symbol") is not None and _pick(t, "GICS Sector") is not None:
-            sp = t
+    for name, fn in (("Wikipedia", _sp500_wikipedia), ("GitHub datasets", _sp500_github)):
+        try:
+            sp = fn()
+            log(f"  S&P 500 dari {name}: {len(sp)} baris")
             break
+        except Exception as e:
+            log(f"  S&P 500 dari {name} gagal: {e}")
     if sp is None:
-        raise RuntimeError("Tabel S&P 500 tidak ditemukan di Wikipedia")
-    cs, cn, cg = _pick(sp, "Symbol"), _pick(sp, "Security"), _pick(sp, "GICS Sector")
+        raise RuntimeError("Daftar S&P 500 tidak bisa diambil dari Wikipedia maupun GitHub datasets")
+    cs, cn, cg = _pick(sp, "Symbol"), _pick(sp, "Security", "Name"), _pick(sp, "GICS Sector", "Sector")
     for _, r in sp.iterrows():
         tk = str(r[cs]).strip().upper()
-        stocks[tk] = {"ticker": tk, "company": str(r[cn]).strip(), "sector": str(r[cg]).strip(), "idx": ["SP500"]}
+        stocks[tk] = {"ticker": tk, "company": str(r[cn]).strip() if cn is not None else "",
+                      "sector": str(r[cg]).strip() if cg is not None else "", "idx": ["SP500"]}
 
-    ndx = None
-    for t in _read_tables("https://en.wikipedia.org/wiki/Nasdaq-100"):
-        if _pick(t, "Ticker", "Symbol") is not None and _pick(t, "Company", "Security") is not None and len(t) > 80:
-            ndx = t
-            break
+    ndx = _ndx_tables()
     if ndx is None:
-        raise RuntimeError("Tabel Nasdaq-100 tidak ditemukan di Wikipedia")
-    cs, cn = _pick(ndx, "Ticker", "Symbol"), _pick(ndx, "Company", "Security")
-    cg = _pick(ndx, "GICS Sector", "ICB Industry[14]", "ICB Industry", "Industry")
-    for _, r in ndx.iterrows():
-        tk = str(r[cs]).strip().upper()
-        if tk in stocks:
-            stocks[tk]["idx"].append("NDX")
-        else:
-            stocks[tk] = {
-                "ticker": tk,
-                "company": str(r[cn]).strip(),
-                "sector": str(r[cg]).strip() if cg is not None else "",
-                "idx": ["NDX"],
-            }
+        WARNINGS.append("Daftar Nasdaq-100 gagal diambil; hanya saham S&P 500 yang dipakai kali ini.")
+    else:
+        cs, cn = _pick(ndx, "Ticker", "Symbol"), _pick(ndx, "Company", "Security")
+        cg = _pick(ndx, "GICS Sector", "ICB Industry[14]", "ICB Industry", "Industry")
+        for _, r in ndx.iterrows():
+            tk = str(r[cs]).strip().upper()
+            if tk in stocks:
+                stocks[tk]["idx"].append("NDX")
+            else:
+                stocks[tk] = {"ticker": tk, "company": str(r[cn]).strip(),
+                              "sector": str(r[cg]).strip() if cg is not None else "", "idx": ["NDX"]}
 
     if len(stocks) < 450:
         raise RuntimeError(f"Daftar anggota indeks terlalu sedikit ({len(stocks)}), dibatalkan")
     return {
         "updatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "stocks": sorted(stocks.values(), key=lambda s: s["ticker"]),
+        "hasNdx": ndx is not None,
     }
 
 
@@ -105,10 +142,10 @@ def load_constituents() -> dict:
     if CONST_FILE.exists():
         cur = json.loads(CONST_FILE.read_text())
         age = datetime.now(timezone.utc) - datetime.fromisoformat(cur["updatedAt"])
-        if age.days < 30 and os.environ.get("FORCE_CONSTITUENTS") != "1":
+        if age.days < 30 and cur.get("hasNdx", True) and os.environ.get("FORCE_CONSTITUENTS") != "1":
             log(f"Daftar indeks dipakai ulang (umur {age.days} hari, {len(cur['stocks'])} saham)")
             return cur
-    log("Memperbarui daftar anggota S&P 500 dan Nasdaq-100 dari Wikipedia ...")
+    log("Memperbarui daftar anggota S&P 500 dan Nasdaq-100 ...")
     try:
         new = fetch_constituents()
     except Exception as e:  # pakai daftar lama jika ada
@@ -145,7 +182,7 @@ def finnhub_metric(symbol: str, key: str) -> dict | None:
             time.sleep(15 * (attempt + 1))
             continue
         if r.status_code in (401, 403):
-            raise SystemExit(f"Finnhub menolak API key (HTTP {r.status_code}). Cek secret FINNHUB_API_KEY.")
+            raise RuntimeError(f"Finnhub menolak API key (HTTP {r.status_code}). Cek secret FINNHUB_API_KEY.")
         if r.status_code != 200:
             return None
         return (r.json() or {}).get("metric") or None
@@ -177,6 +214,21 @@ def from_metric(m: dict) -> dict:
         "_perf1y": first(m, "52WeekPriceReturnDaily"),
         "_hi52": first(m, "52WeekHigh"),
     }
+
+
+def check_key(key: str):
+    log("Mengecek API key Finnhub ...")
+    try:
+        r = requests.get(f"{FINNHUB}/quote", params={"symbol": "AAPL", "token": key}, timeout=30)
+    except requests.RequestException as e:
+        raise RuntimeError(f"Finnhub tidak bisa dihubungi: {e}")
+    if r.status_code in (401, 403):
+        raise RuntimeError(
+            f"Finnhub menolak API key (HTTP {r.status_code}). Salin ulang API key dari finnhub.io/dashboard "
+            "lalu perbarui secret FINNHUB_API_KEY (tanpa spasi atau tanda kutip).")
+    if r.status_code != 200:
+        raise RuntimeError(f"Finnhub membalas HTTP {r.status_code}: {r.text[:200]}")
+    log("  API key valid")
 
 
 # ---------------------------------------------------------------- prices
@@ -344,6 +396,7 @@ def main():
     key = os.environ.get("FINNHUB_API_KEY", "").strip()
     if not key:
         raise SystemExit("FINNHUB_API_KEY belum diisi. Tambahkan di Settings > Secrets and variables > Actions.")
+    check_key(key)
     DATA.mkdir(exist_ok=True)
     const = load_constituents()
     tickers = [s["ticker"] for s in const["stocks"]]
@@ -385,9 +438,24 @@ def main():
     }
     OUT_FILE.write_text(json.dumps(out, separators=(",", ":")))
     log(f"Selesai: {len(rows)} saham, {len(missing)} tanpa fundamental -> {OUT_FILE.relative_to(ROOT)}")
+    summary(f"### Berhasil\n- {len(rows)} saham diperbarui\n- {len(missing)} saham tanpa data fundamental\n"
+            f"- Harga harian: {'ada' if prices is not None else 'GAGAL (SMA/RSI kosong)'}")
+    for w in WARNINGS:
+        summary(f"- Peringatan: {w}")
     if len(missing) > len(tickers) * 0.5:
-        sys.exit("Lebih dari separuh saham gagal diambil dari Finnhub")
+        raise RuntimeError(f"Lebih dari separuh saham ({len(missing)}) gagal diambil dari Finnhub")
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except SystemExit as e:
+        if e.code not in (0, None):
+            summary(f"### Gagal\n{e.code}")
+        raise
+    except Exception as e:
+        import traceback
+
+        traceback.print_exc()
+        summary(f"### Gagal\n**{type(e).__name__}**: {e}")
+        sys.exit(1)
