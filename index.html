@@ -270,6 +270,7 @@ function renderStatus(){
   el.innerHTML = `<span><span class="dot ${ageH>80?"old":""}"></span>Diperbarui <b>${esc(wib)} WIB</b></span>
     <span class="num">${rows.length} saham</span>
     ${miss?`<span class="note">${miss} saham tanpa data fundamental hari ini</span>`:""}
+    ${DATA.hasNdx===false?`<span class="note" style="color:var(--warn)">Daftar Nasdaq-100 belum terambil; saat ini hanya saham S&amp;P 500</span>`:""}
     ${DATA.sources&&!DATA.sources.prices?`<span class="note" style="color:var(--warn)">Data harga harian gagal diambil; SMA, RSI dan 52W high kosong</span>`:""}`;
 }
 function renderTabs(){
@@ -326,7 +327,7 @@ function renderSummary(box){
     <p class="note">Klik baris untuk melihat semua kriteria dari 7 metode. Beberapa metode saling bertolak belakang (Value dan Momentum jarang lolos bersamaan), jadi lolos 3–4 metode sudah termasuk kuat.</p>`;
   $("minPass").addEventListener("change",ev=>{ store.set("ss.min",ev.target.value); renderResults(); });
   const tb=$("tb");
-  if(!list.length){ tb.innerHTML=`<tr><td colspan="7" class="empty">Tidak ada saham yang cocok dengan filter ini.</td></tr>`; return; }
+  if(!list.length){ tb.innerHTML=`<tr><td colspan="7" class="empty">${emptyMsg()||"Tidak ada saham yang cocok dengan filter ini."}</td></tr>`; return; }
   tb.innerHTML = list.slice(0,600).map(e=>{
     const pct=Math.round(e.score*100), cls=e.score>=.75?"full":e.score<.4?"low":"";
     let tr=`<tr class="row" data-t="${esc(e.o.ticker)}" tabindex="0" aria-expanded="${openTicker===e.o.ticker}">${stockCell(e.o)}
@@ -351,7 +352,7 @@ function renderMethod(box,m){
     <p class="note">Klik baris untuk rincian. Kotak hijau = lolos, merah = gagal, putus-putus = data tidak tersedia (dihitung gagal).</p>`;
   $("onlyFull").addEventListener("change",ev=>{ store.set("ss.only",ev.target.checked?"1":"0"); renderResults(); });
   const tb=$("tb");
-  if(!list.length){ tb.innerHTML=`<tr><td colspan="${3+m.cols.length}" class="empty">Belum ada saham yang cocok. Longgarkan ambang di panel kiri, atau matikan "Hanya lolos semua".</td></tr>`; return; }
+  if(!list.length){ tb.innerHTML=`<tr><td colspan="${3+m.cols.length}" class="empty">${emptyMsg()||"Belum ada saham yang cocok. Longgarkan ambang di panel kiri, atau matikan &quot;Hanya lolos semua&quot;."}</td></tr>`; return; }
   tb.innerHTML = list.slice(0,600).map(({e,o})=>{ const p=e.per[m.id];
     const pct=Math.round(p.score*100), cls=p.full?"full":p.score<.5?"low":"";
     let tr=`<tr class="row" data-t="${esc(o.ticker)}" tabindex="0" aria-expanded="${openTicker===o.ticker}">${stockCell(o)}
@@ -387,6 +388,11 @@ function renderEtf(box){
     </ul></div>`;
 }
 
+function emptyMsg(){
+  return (ixFilter==="NDX" && DATA && DATA.hasNdx===false)
+    ? "Daftar anggota Nasdaq-100 belum terambil di pembaruan terakhir. Pilih Semua atau S&amp;P 500, atau jalankan ulang workflow."
+    : null;
+}
 function renderResults(){
   const box=$("results");
   if(!DATA){ box.innerHTML = `<div class="tablebox"><div class="empty">Belum ada data untuk disaring. Setelah workflow pertama selesai, tabel saham akan muncul di sini.</div></div>`; return; }

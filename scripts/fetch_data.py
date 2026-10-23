@@ -27,7 +27,9 @@ CONST_FILE = DATA / "constituents.json"
 OUT_FILE = DATA / "stocks.json"
 
 FINNHUB = "https://finnhub.io/api/v1"
-UA = {"User-Agent": "screener-saham/1.1 (https://github.com/sultanamra3-arch/screener-saham; personal stock screener) python-requests"}
+UA = {"User-Agent": "ScreenerSahamBot/1.2 (https://github.com/sultanamra3-arch/screener-saham; sultanamra3@users.noreply.github.com)"}
+BROWSER = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36",
+           "Accept": "application/json, text/plain, */*", "Accept-Language": "en-US,en;q=0.9"}
 SP500_CSV = "https://raw.githubusercontent.com/datasets/s-and-p-500-companies/main/data/constituents.csv"
 WARNINGS: list[str] = []
 ETFS = ["VOO", "SPY", "QQQ"]
@@ -83,16 +85,49 @@ def _sp500_github():
     return pd.read_csv(io.StringIO(r.text))
 
 
+def _ndx_from_tables(tables):
+    for t in tables:
+        if _pick(t, "Ticker", "Symbol") is not None and _pick(t, "Company", "Security") is not None and len(t) > 80:
+            return t
+    return None
+
+
+def _ndx_wiki_api():
+    import pandas as pd
+
+    r = requests.get("https://en.wikipedia.org/w/api.php",
+                     params={"action": "parse", "page": "Nasdaq-100", "prop": "text",
+                             "format": "json", "formatversion": "2"},
+                     headers=UA, timeout=60)
+    r.raise_for_status()
+    return _ndx_from_tables(pd.read_html(io.StringIO(r.json()["parse"]["text"])))
+
+
+def _ndx_wiki_page():
+    return _ndx_from_tables(_read_tables("https://en.wikipedia.org/wiki/Nasdaq-100"))
+
+
+def _ndx_nasdaq():
+    import pandas as pd
+
+    r = requests.get("https://api.nasdaq.com/api/quote/list-type/nasdaq100", headers=BROWSER, timeout=60)
+    r.raise_for_status()
+    rows = (((r.json() or {}).get("data") or {}).get("data") or {}).get("rows") or []
+    if len(rows) < 80:
+        return None
+    return pd.DataFrame([{"Ticker": x.get("symbol"), "Company": x.get("companyName")} for x in rows])
+
+
 def _ndx_tables():
-    for url in ("https://en.wikipedia.org/wiki/Nasdaq-100",
-                "https://en.wikipedia.org/api/rest_v1/page/html/Nasdaq-100"):
+    for name, fn in (("Wikipedia API", _ndx_wiki_api), ("Wikipedia", _ndx_wiki_page), ("Nasdaq.com", _ndx_nasdaq)):
         try:
-            for t in _read_tables(url):
-                if _pick(t, "Ticker", "Symbol") is not None and _pick(t, "Company", "Security") is not None and len(t) > 80:
-                    return t
-            log(f"  tabel Nasdaq-100 tidak ditemukan di {url}")
+            t = fn()
+            if t is not None:
+                log(f"  Nasdaq-100 dari {name}: {len(t)} baris")
+                return t
+            log(f"  Nasdaq-100 dari {name}: tabel tidak ditemukan")
         except Exception as e:
-            log(f"  Nasdaq-100 dari {url} gagal: {e}")
+            log(f"  Nasdaq-100 dari {name} gagal: {e}")
     return None
 
 
@@ -127,7 +162,7 @@ def fetch_constituents() -> dict:
                 stocks[tk]["idx"].append("NDX")
             else:
                 stocks[tk] = {"ticker": tk, "company": str(r[cn]).strip(),
-                              "sector": str(r[cg]).strip() if cg is not None else "", "idx": ["NDX"]}
+                              "sector": (str(r[cg]).strip() if cg is not None and str(r[cg]) != "nan" else ""), "idx": ["NDX"]}
 
     if len(stocks) < 450:
         raise RuntimeError(f"Daftar anggota indeks terlalu sedikit ({len(stocks)}), dibatalkan")
@@ -426,6 +461,7 @@ def main():
     out = {
         "updatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "constituentsUpdatedAt": const["updatedAt"],
+        "hasNdx": const.get("hasNdx", True),
         "sources": {
             "fundamentals": "Finnhub",
             "prices": "Yahoo Finance" if prices is not None else None,
