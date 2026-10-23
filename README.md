@@ -34,6 +34,15 @@ Data diperbarui otomatis setiap **Selasa–Sabtu pukul 06.00 WIB** oleh GitHub A
 
 4. **Buka website**: `https://sultanamra3-arch.github.io/screener-saham/`
 
+## Notifikasi Telegram (opsional)
+
+Setiap selesai pembaruan, bot mengirim sinyal BELI/JUAL baru (trader dan investor) lengkap dengan harga beli, stop loss/jual, dan target, plus saham yang lolos ≥4 metode. Jika pembaruan gagal, bot mengirim peringatan.
+
+1. Di Telegram buka **@BotFather** → `/newbot` → salin token.
+2. Kirim pesan apa saja ke bot Anda.
+3. Buka `https://api.telegram.org/bot<TOKEN>/getUpdates` di browser, catat angka `"chat":{"id": ...}`.
+4. Simpan secret `TELEGRAM_BOT_TOKEN` dan `TELEGRAM_CHAT_ID` di Settings → Secrets and variables → Actions.
+
 ## Struktur
 
 ```

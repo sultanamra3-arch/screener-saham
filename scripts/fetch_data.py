@@ -477,12 +477,14 @@ def investor_status(rows: list[dict]) -> dict:
         eps = r.get("eps") if r.get("eps") is not None else (price / pe if price and pe and pe > 0 else None)
         bvps = r.get("bvps") if r.get("bvps") is not None else (price / pb if price and pb and pb > 0 else None)
         if not price or not eps or eps <= 0:
-            out[r["ticker"]] = "na"
+            out[r["ticker"]] = {"s": "na"}
             continue
         fv_pe = fpe.get(r.get("sector"), 18) * eps
         graham = math.sqrt(22.5 * eps * bvps) if bvps and bvps > 0 else None
         fv = (fv_pe + graham) / 2 if graham and graham >= fv_pe * 0.6 else fv_pe
-        out[r["ticker"]] = "buy" if price <= fv * (1 - MOS) else "sell" if price >= fv * (1 + PREM) else "wait"
+        buy, sell = fv * (1 - MOS), fv * (1 + PREM)
+        out[r["ticker"]] = {"s": "buy" if price <= buy else "sell" if price >= sell else "wait",
+                            "fv": round(fv, 2), "buy": round(buy, 2), "sell": round(sell, 2)}
     return out
 
 
@@ -490,7 +492,9 @@ def update_investor_history(rows: list[dict], day: str):
     hist = json.loads(SIG_FILE.read_text()) if SIG_FILE.exists() else {}
     status = investor_status(rows)
     for r in rows:
-        t, st = r["ticker"], status.get(r["ticker"], "na")
+        t, plan = r["ticker"], status.get(r["ticker"], {"s": "na"})
+        st = plan["s"]
+        r["invPlan"] = plan
         h = hist.get(t)
         if h is None:
             h = {"s": st, "since": day, "px": r.get("price"), "first": True, "log": []}
