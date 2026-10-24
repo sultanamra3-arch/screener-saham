@@ -37,6 +37,7 @@ BROWSER = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/
 SP500_CSV = "https://raw.githubusercontent.com/datasets/s-and-p-500-companies/main/data/constituents.csv"
 WARNINGS: list[str] = []
 ETFS = ["VOO", "SPY", "QQQ"]
+INDICES = ["^GSPC", "^NDX", "^VIX"]
 # Cadangan jika Yahoo tidak memberi rasio biaya. Selalu cek situs penerbit.
 ETF_FALLBACK = {
     "VOO": {"name": "Vanguard S&P 500 ETF", "index": "S&P 500", "expense": 0.03},
@@ -433,6 +434,48 @@ def etf_info(prices) -> dict:
     return res
 
 
+# ---------------------------------------------------------------- siklus & Fibonacci
+CYC_FILE = DATA / "cycles.json"
+SERIES_FILE = DATA / "series.json"
+CYC_STATE = DATA / "cycles_state.json"
+
+
+def run_cycles(close, indices: dict, cfg: dict, stock_cols: list, breadth_cols: list, tick=None, vix=None):
+    """Tidak boleh menggagalkan pembaruan utama: kesalahan hanya dicatat."""
+    try:
+        import cycles
+        import yfinance as yf
+
+        long = {}
+        for name, sym in indices.items():
+            try:
+                df = yf.download(sym, period="max", interval="1d", auto_adjust=True, progress=False)
+                c = df["Close"].squeeze().dropna()
+                if len(c) > 1000:
+                    long[name] = c
+            except Exception as e:
+                log(f"  riwayat panjang {sym}: {e}")
+        state = json.loads(CYC_STATE.read_text()) if CYC_STATE.exists() else {}
+        out, series = cycles.run(close, indices, long, stock_cols, breadth_cols, cfg, state, tick=tick, vix=vix)
+        CYC_FILE.write_text(json.dumps(out, separators=(",", ":")))
+        SERIES_FILE.write_text(cycles.dump_series(series))
+        CYC_STATE.write_text(json.dumps(state, separators=(",", ":")))
+        lines = ["### Siklus & Fibonacci"]
+        for name, t in out.get("tests", {}).items():
+            if not t or "time" not in t:
+                lines.append(f"- {name}: uji tidak tersedia ({(t or {}).get('error', 'riwayat kurang')})")
+                continue
+            useful = [k for sec in ("time", "price", "season") for k, v in t[sec].items() if v and v["verdict"] == "berguna"]
+            lines.append(f"- {name}: data {t['from']}–{t['to']}, {t['pivots']} titik balik; unsur yang terbukti berguna: {', '.join(useful) or 'tidak ada'}")
+        summary("\n".join(lines))
+        log("Siklus & Fibonacci selesai")
+    except Exception as e:
+        import traceback
+
+        traceback.print_exc()
+        summary(f"- Peringatan: Siklus & Fibonacci gagal dihitung ({type(e).__name__}: {str(e)[:150]})")
+
+
 # ---------------------------------------------------------------- main
 def clean(d: dict) -> dict:
     out = {}
@@ -524,7 +567,7 @@ def main():
         time.sleep(1.05)  # paket gratis: ±60 panggilan per menit
 
     log("Mengambil harga harian ...")
-    prices, volume = fetch_prices(tickers + ETFS)
+    prices, volume = fetch_prices(tickers + ETFS + INDICES)
     if prices is None:
         log("  Harga harian gagal; SMA, RSI, dan 52W high akan kosong hari ini")
 
@@ -562,6 +605,13 @@ def main():
         "etf": etf_info(prices),
     }
     OUT_FILE.write_text(json.dumps(out, separators=(",", ":")))
+    if prices is not None:
+        import notify_telegram
+
+        vix = float(prices["^VIX"].dropna().iloc[-1]) if "^VIX" in prices and prices["^VIX"].notna().any() else None
+        run_cycles(prices, {"S&P 500": "^GSPC", "Nasdaq-100": "^NDX"},
+                   {"ramadan": False, "holidays": set(notify_telegram.HOLIDAYS), "vix_for": "S&P 500"},
+                   tickers, tickers, vix=vix)
     log(f"Selesai: {len(rows)} saham, {len(missing)} tanpa fundamental -> {OUT_FILE.relative_to(ROOT)}")
     summary(f"### Berhasil\n- {len(rows)} saham diperbarui (harga penutupan {day})\n- {len(missing)} saham tanpa data fundamental\n"
             f"- Harga harian: {'ada' if prices is not None else 'GAGAL (SMA/RSI kosong)'}"

@@ -51,6 +51,10 @@ Setiap selesai pembaruan, bot mengirim sinyal BELI/JUAL baru (trader dan investo
 3. Buka `https://api.telegram.org/bot<TOKEN>/getUpdates` di browser, catat angka `"chat":{"id": ...}`.
 4. Simpan secret `TELEGRAM_BOT_TOKEN` dan `TELEGRAM_CHAT_ID` di Settings → Secrets and variables → Actions.
 
+## Siklus & Fibonacci (tab "Siklus")
+
+Analisis waktu dan harga dari teknik yang terbuka untuk umum: titik balik ZigZag, zona konfluensi Fibonacci (retracement, proyeksi, SMA50/200, angka bulat), kalender fase bulan, stasiun planet (Merkurius, Venus, Mars), Fibonacci time zone dan pola musiman, tanggal rawan pembalikan, rentang pergerakan mingguan, dan kesehatan pasar (breadth). Setiap unsur diuji terhadap tanggal acak pada riwayat indeks sejak 2005, dan setiap ramalan dicatat di papan skor sebelum terjadi. Kalender mingguan dikirim ke Telegram setiap Senin pagi.
+
 ## Struktur
 
 ```
