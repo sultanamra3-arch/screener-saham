@@ -37,7 +37,7 @@ BROWSER = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/
 SP500_CSV = "https://raw.githubusercontent.com/datasets/s-and-p-500-companies/main/data/constituents.csv"
 WARNINGS: list[str] = []
 ETFS = ["VOO", "SPY", "QQQ"]
-INDICES = ["^GSPC", "^NDX", "^VIX"]
+INDICES = ["^GSPC", "^NDX", "^VIX", "IDR=X"]
 # Cadangan jika Yahoo tidak memberi rasio biaya. Selalu cek situs penerbit.
 ETF_FALLBACK = {
     "VOO": {"name": "Vanguard S&P 500 ETF", "index": "S&P 500", "expense": 0.03},
@@ -601,6 +601,8 @@ def main():
         "newSession": prev_day != day,
         "showComparison": show_cmp,
         **res,
+        "fx": (round(float(prices["IDR=X"].dropna().iloc[-1]), 1)
+               if prices is not None and "IDR=X" in prices and prices["IDR=X"].notna().any() else None),
         "stocks": rows,
         "etf": etf_info(prices),
     }
