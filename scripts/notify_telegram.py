@@ -149,7 +149,7 @@ def market_regime(d: dict, c: dict) -> str:
 RR_MIN, UP_MIN = 2, 4.0
 
 
-def support_section(d: dict) -> list[str]:
+def support_section(d: dict, show_waits: bool = True) -> list[str]:
     f = ROOT / "data" / "cycles.json"
     if not f.exists():
         return []
@@ -219,7 +219,7 @@ def support_section(d: dict) -> list[str]:
             L.append(f"<i>{e(s)}</i>")
         if len(items) > 8:
             L.append(f"…dan {len(items) - 8} lainnya di tab Watchlist pribadi")
-    if waits:
+    if waits and show_waits:
         L += ["", b(f"🎯 Antre beli di support berikutnya ({len(waits)})"),
               "<i>Sudah di area support tapi R1 terlalu dekat; tunggu harga turun ke support berikutnya.</i>"]
         L.append(" · ".join(f"{b(t)} {usd(s2['hi'])}" for _, t, o, s2, rr2 in waits[:6])
