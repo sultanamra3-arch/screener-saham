@@ -564,9 +564,10 @@ def slim_rows(rows):
             dd = {k: v for k, v in (("c", c), ("h", h)) if v}
             if dd:
                 d[mid] = dd
-        tt = o.pop("tt", None)
-        if tt:
-            d["_tt"] = tt
+        for k in ("tt", "insL", "ksL"):
+            v = o.pop(k, None)
+            if v:
+                d["_" + k] = v
         if d:
             d_key = o["ticker"]
             det[d_key] = d
@@ -613,6 +614,24 @@ def main():
     state = load_state()
     log("Menghitung 7 metode ...")
     res = strategies.run(rows, prices, volume, day, state)
+    import extras
+    from datetime import date as _date
+    today = _date.fromisoformat(day)
+    log("Mengambil pembelian insider (Finnhub) ...")
+    try:
+        ins = extras.insider(tickers, key, today)
+        for r in rows:
+            b = ins.get(r["ticker"])
+            if b:
+                r["ins"], r["insL"] = extras.insider_summary(b), b
+        log(f"  {len(ins)} saham dengan pembelian insider dalam {extras.DAYS} hari")
+    except Exception as e:
+        log(f"  insider gagal: {str(e)[:120]}")
+    log("Kalender dividen (Yahoo) ...")
+    try:
+        extras.divcal_update(rows, DATA / "divcal_cache.json", today)
+    except Exception as e:
+        log(f"  kalender dividen gagal: {str(e)[:120]}")
     show_cmp = not state.get("comparisonShown")
     state["comparisonShown"] = True
     SIG_FILE.write_text(json.dumps(state, separators=(",", ":")))
