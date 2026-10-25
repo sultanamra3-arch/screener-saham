@@ -373,7 +373,7 @@ def technicals(s) -> dict:
     import pandas as pd
 
     s = s.dropna()
-    out = {k: None for k in ("price", "sma20", "sma50", "sma200", "rsi", "perf1m", "perf6m", "perf1y", "perfYtd", "hi52")}
+    out = {k: None for k in ("price", "sma20", "sma50", "sma200", "rsi", "perf1m", "perf6m", "perf1y", "perfYtd", "hi52", "perf1w", "perf3m", "perf1mP", "perf3mP")}
     if len(s) < 25:
         return out
     p = float(s.iloc[-1])
@@ -390,6 +390,12 @@ def technicals(s) -> dict:
 
     out["perf1m"] = pct(p, back(30))
     out["perf6m"] = pct(p, back(182))
+    # untuk Peta sektor: 1 minggu, 3 bulan, dan nilai yang sama 5 hari bursa lalu (arah peringkat)
+    ago = lambda k: float(s.iloc[-1 - k]) if len(s) > k else None
+    out["perf1w"] = pct(p, ago(5))
+    out["perf3m"] = pct(p, ago(63))
+    out["perf1mP"] = pct(ago(5), ago(26))
+    out["perf3mP"] = pct(ago(5), ago(68))
     out["perf1y"] = pct(p, back(365))
     ytd = s[s.index.year == last.year]
     prev_year = s[s.index.year < last.year]
