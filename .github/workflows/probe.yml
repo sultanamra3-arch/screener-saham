@@ -1,0 +1,29 @@
+name: Uji sumber data (insider & dividen)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt curl_cffi
+      - name: Uji
+        env:
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+        run: python scripts/probe_sources.py
+      - name: Simpan hasil
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/probe.json
+          git commit -m "Hasil uji sumber data" || exit 0
+          for i in 1 2 3; do git pull --rebase && git push && break; sleep 5; done
