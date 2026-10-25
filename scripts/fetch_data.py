@@ -547,6 +547,31 @@ def build(const: dict, metrics: dict, prices) -> list[dict]:
     return rows
 
 
+
+def slim_rows(rows):
+    """Pisahkan rincian syarat (c), riwayat sinyal (h), dan trend template (tt) ke data/detail.json
+    supaya stocks.json yang diunduh saat halaman dibuka jauh lebih kecil."""
+    import copy
+    slim, det, labels = copy.deepcopy(rows), {}, {}
+    code = lambda v: "1" if v == 1 else "0" if v == 0 else "2" if v == 2 else "n"
+    for o in slim:
+        d = {}
+        for mid, st in (o.get("m") or {}).items():
+            c, h = st.pop("c", None), st.pop("h", None)
+            if c:
+                st["cs"] = "".join(code(x[2]) for x in c)
+                labels.setdefault(mid, [x[0] for x in c])
+            dd = {k: v for k, v in (("c", c), ("h", h)) if v}
+            if dd:
+                d[mid] = dd
+        tt = o.pop("tt", None)
+        if tt:
+            d["_tt"] = tt
+        if d:
+            d_key = o["ticker"]
+            det[d_key] = d
+    return slim, det, labels
+
 def main():
     key = os.environ.get("FINNHUB_API_KEY", "").strip()
     if not key:
@@ -612,7 +637,9 @@ def main():
         "stocks": rows,
         "etf": etf_info(prices),
     }
-    OUT_FILE.write_text(json.dumps(out, separators=(",", ":")))
+    slim, det, labels = slim_rows(out["stocks"])
+    (DATA / "detail.json").write_text(json.dumps(det, separators=(",", ":")))
+    OUT_FILE.write_text(json.dumps({**out, "stocks": slim, "clabels": labels, "hasDetail": True}, separators=(",", ":")))
     if prices is not None:
         import notify_telegram
 
