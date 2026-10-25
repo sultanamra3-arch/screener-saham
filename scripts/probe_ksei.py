@@ -1,21 +1,28 @@
-"""Cari tautan data kepemilikan di situs KSEI (sekali jalan). Hasil: data/probe_ksei.json."""
+"""Cari API data kepemilikan efek di situs KSEI (sekali jalan). Hasil: data/probe_ksei.json."""
 import json, re
 from pathlib import Path
 import requests
 OUT = Path(__file__).resolve().parent.parent / "data" / "probe_ksei.json"
 H = {"User-Agent": "Mozilla/5.0"}
+B = "https://www.ksei.co.id"
 res = {}
-pages = ["https://www.ksei.co.id/", "https://www.ksei.co.id/archive_download/holding_composition",
-         "https://www.ksei.co.id/archive_download/master_securities", "https://www.ksei.co.id/publications/Data_Statistik_KSEI",
-         "https://www.ksei.co.id/archive_download/stock_ownership", "https://www.ksei.co.id/archive_download/kepemilikan_efek"]
-for u in pages:
+r = requests.get(B + "/id/publikasi/data-dan-statistik/kepemilikan-efek", headers=H, timeout=30)
+html = r.text
+res["page_status"] = r.status_code
+res["page_urls"] = sorted(set(re.findall(r'https?://[^"\'\s<>]+', html)))[:150]
+res["storage"] = sorted(set(re.findall(r'(?:https?://[^"\'\s<>]*)?/storage/[^"\'\s<>]+', html)))[:150]
+res["kep_snips"] = re.findall(r'.{0,200}(?:Kepemilikan|kepemilikan|5%|1%|xlsx|pdf).{0,200}', html)[:40]
+scripts = sorted(set(re.findall(r'src="([^"]+\.js)"', html)))
+res["scripts"] = scripts
+hits = set()
+for s in scripts[:40]:
+    u = s if s.startswith("http") else B + s
     try:
-        r = requests.get(u, headers=H, timeout=30)
-        links = sorted(set(re.findall(r'href="([^"]+)"', r.text)))
-        key = [l for l in links if re.search(r"(?i)kepemilikan|ownership|holding|5%|pemegang|archive|download|publication|statist", l)]
-        res[u] = {"status": r.status_code, "n_links": len(links), "key_links": key[:120],
-                  "text_hits": re.findall(r"(?i)[^<>]{0,60}(?:di atas 5|above 5|1%|kepemilikan efek)[^<>]{0,60}", r.text)[:30]}
+        js = requests.get(u, headers=H, timeout=30).text
+        for m in re.findall(r'["\'`](https?://[^"\'`\s]+|/api/[^"\'`\s]+)["\'`]', js):
+            hits.add(m)
     except Exception as e:
-        res[u] = {"err": str(e)[:200]}
+        hits.add("ERR " + str(e)[:80])
+res["js_urls"] = sorted(hits)[:300]
 OUT.write_text(json.dumps(res, indent=1, ensure_ascii=False))
 print("ok")
