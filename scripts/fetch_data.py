@@ -602,6 +602,16 @@ def main():
     prices, volume = fetch_prices(tickers + ETFS + INDICES)
     if prices is None:
         log("  Harga harian gagal; SMA, RSI, dan 52W high akan kosong hari ini")
+    fx = None
+    if prices is not None:
+        if "IDR=X" in prices and prices["IDR=X"].notna().any():
+            fx = round(float(prices["IDR=X"].dropna().iloc[-1]), 1)
+        # kurs diperdagangkan juga di akhir pekan: buang baris tanpa harga saham supaya tanggal sesi tetap benar
+        have = [t for t in tickers if t in prices]
+        keep = prices[have].notna().any(axis=1)
+        prices = prices.loc[keep]
+        if volume is not None:
+            volume = volume.loc[volume.index.isin(prices.index)]
 
     rows = build(const, metrics, prices)
     day = prices.index[-1].strftime("%Y-%m-%d") if prices is not None else datetime.now(timezone.utc).strftime("%Y-%m-%d")
@@ -651,8 +661,7 @@ def main():
         "newSession": prev_day != day,
         "showComparison": show_cmp,
         **res,
-        "fx": (round(float(prices["IDR=X"].dropna().iloc[-1]), 1)
-               if prices is not None and "IDR=X" in prices and prices["IDR=X"].notna().any() else None),
+        "fx": fx,
         "stocks": rows,
         "etf": etf_info(prices),
     }
