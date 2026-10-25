@@ -1,0 +1,48 @@
+{
+ "https://www.ksei.co.id/": {
+  "status": 200,
+  "n_links": 114,
+  "key_links": [
+   "/id/dukungan-layanan/administrasi-pemegang-rekening",
+   "/id/publikasi/data-dan-statistik/grafik",
+   "/id/publikasi/data-dan-statistik/kepemilikan-efek",
+   "/id/publikasi/data-dan-statistik/statik-efek",
+   "/id/publikasi/data-dan-statistik/statistik-ksei",
+   "/id/tentang-ksei/pemangku-kepentingan?tab=pemegang-saham"
+  ],
+  "text_hits": [
+   "\n\t\t\t\t\t\t\t\t\t\t\t\tKepemilikan Efek\n\t\t\t\t\t\t\t\t\t\t\t",
+   "07:53\",updated_at:\"2026-05-21 11:24:59\",deleted_at:a,title:\"Kepemilikan Efek\",url_menu:aH,url_content:aH},{rn:\"27\",id:\"02c73349-5dbf-477"
+  ]
+ },
+ "https://www.ksei.co.id/archive_download/holding_composition": {
+  "status": 404,
+  "n_links": 33,
+  "key_links": [],
+  "text_hits": []
+ },
+ "https://www.ksei.co.id/archive_download/master_securities": {
+  "status": 404,
+  "n_links": 33,
+  "key_links": [],
+  "text_hits": []
+ },
+ "https://www.ksei.co.id/publications/Data_Statistik_KSEI": {
+  "status": 404,
+  "n_links": 33,
+  "key_links": [],
+  "text_hits": []
+ },
+ "https://www.ksei.co.id/archive_download/stock_ownership": {
+  "status": 404,
+  "n_links": 33,
+  "key_links": [],
+  "text_hits": []
+ },
+ "https://www.ksei.co.id/archive_download/kepemilikan_efek": {
+  "status": 404,
+  "n_links": 33,
+  "key_links": [],
+  "text_hits": []
+ }
+}
