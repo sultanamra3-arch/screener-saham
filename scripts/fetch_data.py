@@ -645,6 +645,9 @@ def main():
     state = load_state()
     log("Menghitung 7 metode ...")
     res = strategies.run(rows, prices, volume, day, state)
+    import dataguard
+    dq = dataguard.apply(rows, prices)
+    log(f"  penjaga data: {len(dq)} saham ditandai janggal")
     import extras
     from datetime import date as _date
     today = _date.fromisoformat(day)
@@ -682,6 +685,7 @@ def main():
         "newSession": prev_day != day,
         "showComparison": show_cmp,
         **res,
+        "dq": dq,
         "fx": fx,
         "stocks": rows,
         "etf": etf_info(prices),
