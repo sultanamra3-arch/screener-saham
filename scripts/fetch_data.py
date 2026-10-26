@@ -448,6 +448,25 @@ SERIES_FILE = DATA / "series.json"
 CYC_STATE = DATA / "cycles_state.json"
 
 
+def _track(idr: bool, fees):
+    """Rekam jejak Rencana beli (hanya update sore/penuh)."""
+    try:
+        import notify_telegram as nt
+        import plan_track
+
+        d = json.loads(OUT_FILE.read_text())
+        c = json.loads(CYC_FILE.read_text())
+        st = d.get("stats") or {}
+        bad = {m for m in ("canslim", "momentum", "swing") if (st.get(m) or {}).get("n", 0) >= 10 and (st.get(m) or {}).get("avg", 0) < 0}
+        allow = nt.INV if nt.market_regime(d, c) == "tertekan" else [m for m in nt.ORDER if m not in bad]
+        pl = plan_track.plans(d, c, allow, nt.layak, idr=idr, liquid_only=idr)
+        s = plan_track.update(DATA / "plan_track.json", DATA / "ohlc", d["priceDate"], pl, fees)
+        sc = plan_track.score(s)
+        log(f"Rekam jejak: {len(pl)} rencana hari ini, {len(s['open'])} berjalan, {sc.get('n', 0)} selesai")
+    except Exception as e:
+        log(f"  rekam jejak gagal: {e}")
+
+
 def run_cycles(close, indices: dict, cfg: dict, stock_cols: list, breadth_cols: list, tick=None, vix=None):
     """Tidak boleh menggagalkan pembaruan utama: kesalahan hanya dicatat."""
     try:
@@ -683,6 +702,7 @@ def main():
             log(f"Data candlestick: {n} file")
         except Exception as e:
             log(f"  data candlestick gagal: {e}")
+        _track(False, (0.0, 0.0))
     log(f"Selesai: {len(rows)} saham, {len(missing)} tanpa fundamental -> {OUT_FILE.relative_to(ROOT)}")
     summary(f"### Berhasil\n- {len(rows)} saham diperbarui (harga penutupan {day})\n- {len(missing)} saham tanpa data fundamental\n"
             f"- Harga harian: {'ada' if prices is not None else 'GAGAL (SMA/RSI kosong)'}"
