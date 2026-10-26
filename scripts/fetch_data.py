@@ -22,6 +22,7 @@ from pathlib import Path
 import requests
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import ohlc
 import strategies  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -326,6 +327,7 @@ def fetch_prices(tickers: list[str]):
                     if isinstance(close, pd.Series):
                         close = close.to_frame(chunk[0])
                     frames.append(close)
+                    ohlc.keep(df)
                     if "Volume" in df:
                         vol = df["Volume"]
                         if isinstance(vol, pd.Series):
@@ -675,6 +677,12 @@ def main():
         run_cycles(prices, {"S&P 500": "^GSPC", "Nasdaq-100": "^NDX"},
                    {"ramadan": False, "holidays": set(notify_telegram.HOLIDAYS), "vix_for": "S&P 500"},
                    tickers, tickers, vix=vix)
+        try:
+            ym = {yahoo_symbol(t): t for t in tickers + ETFS + INDICES}
+            n = ohlc.write(DATA / "ohlc", prices, volume, tickers, {"S&P 500": "^GSPC", "Nasdaq-100": "^NDX"}, rename=lambda c: ym.get(c, c), decimals=2)
+            log(f"Data candlestick: {n} file")
+        except Exception as e:
+            log(f"  data candlestick gagal: {e}")
     log(f"Selesai: {len(rows)} saham, {len(missing)} tanpa fundamental -> {OUT_FILE.relative_to(ROOT)}")
     summary(f"### Berhasil\n- {len(rows)} saham diperbarui (harga penutupan {day})\n- {len(missing)} saham tanpa data fundamental\n"
             f"- Harga harian: {'ada' if prices is not None else 'GAGAL (SMA/RSI kosong)'}"
