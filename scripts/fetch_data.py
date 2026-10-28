@@ -371,6 +371,28 @@ def pct(a, b):
     return (a / b - 1) * 100
 
 
+def flow(c, v, last) -> dict:
+    """Untuk tab 'Ramai hari ini': perubahan dari penutupan kemarin, volume hari ini dibanding
+    rata-rata 20 hari bursa sebelumnya, dan nilai transaksi hari ini. Kosong bila tidak ditransaksikan hari itu."""
+    out = {"chg1d": None, "volR": None, "val1d": None}
+    try:
+        c = c.dropna()
+        if len(c) < 2 or c.index[-1] != last:
+            return out
+        p = float(c.iloc[-1])
+        out["chg1d"] = round((p / float(c.iloc[-2]) - 1) * 100, 2)
+        if v is not None:
+            v = v.reindex(c.index).fillna(0)
+            if len(v) >= 21:
+                avg, today = float(v.iloc[-21:-1].mean()), float(v.iloc[-1])
+                if avg > 0:
+                    out["volR"] = round(today / avg, 2)
+                out["val1d"] = round(today * p)
+    except Exception:
+        pass
+    return out
+
+
 def technicals(s) -> dict:
     import pandas as pd
 
@@ -636,6 +658,11 @@ def main():
             volume = volume.loc[volume.index.isin(prices.index)]
 
     rows = build(const, metrics, prices)
+    if prices is not None:
+        for row in rows:
+            t = row["ticker"]
+            if t in prices:
+                row.update(flow(prices[t], volume[t] if volume is not None and t in volume else None, prices.index[-1]))
     day = prices.index[-1].strftime("%Y-%m-%d") if prices is not None else datetime.now(timezone.utc).strftime("%Y-%m-%d")
     prev_day = None
     if OUT_FILE.exists():
@@ -762,6 +789,7 @@ def intraday():
             continue
         t = technicals(prices[c])
         r.update({k: v for k, v in t.items() if v is not None})
+        r.update(flow(prices[c], volume[c] if volume is not None and c in volume else None, prices.index[-1]))
         n += 1
     prev["stocks"] = [clean(r) for r in rows]
     prev["intraday"] = {"at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "date": last,
