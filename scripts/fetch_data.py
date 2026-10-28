@@ -467,7 +467,7 @@ def _track(idr: bool, fees):
         log(f"  rekam jejak gagal: {e}")
 
 
-def run_cycles(close, indices: dict, cfg: dict, stock_cols: list, breadth_cols: list, tick=None, vix=None):
+def run_cycles(close, indices: dict, cfg: dict, stock_cols: list, breadth_cols: list, tick=None, vix=None, persist=True):
     """Tidak boleh menggagalkan pembaruan utama: kesalahan hanya dicatat."""
     try:
         import cycles
@@ -486,7 +486,8 @@ def run_cycles(close, indices: dict, cfg: dict, stock_cols: list, breadth_cols: 
         out, series = cycles.run(close, indices, long, stock_cols, breadth_cols, cfg, state, tick=tick, vix=vix)
         CYC_FILE.write_text(json.dumps(out, separators=(",", ":")))
         SERIES_FILE.write_text(cycles.dump_series(series))
-        CYC_STATE.write_text(json.dumps(state, separators=(",", ":")))
+        if persist:  # update jam bursa tidak menyimpan status area support
+            CYC_STATE.write_text(json.dumps(state, separators=(",", ":")))
         lines = ["### Siklus & Fibonacci"]
         for name, t in out.get("tests", {}).items():
             if not t or "time" not in t:
@@ -727,9 +728,77 @@ def main():
         raise RuntimeError(f"Lebih dari separuh saham ({len(missing)}) gagal diambil dari Finnhub")
 
 
+
+def intraday():
+    """Update jam bursa AS (tiap jam): harga sementara saja. Sinyal metode, posisi simulasi, dan
+    status area support tidak disimpan; semuanya final pada pembaruan pagi setelah bursa tutup."""
+    from zoneinfo import ZoneInfo
+    t0 = time.time()
+    if not OUT_FILE.exists():
+        log("Belum ada data penutupan; update jam bursa dilewati")
+        return
+    prev = json.loads(OUT_FILE.read_text())
+    rows = prev["stocks"]
+    tickers = [r["ticker"] for r in rows]
+    log(f"Update jam bursa: harga {len(tickers)} saham ...")
+    prices, volume = fetch_prices(tickers + INDICES)
+    if prices is None:
+        raise RuntimeError("Harga dari Yahoo gagal diambil")
+    have = [t for t in tickers if t in prices]
+    prices = prices.loc[prices[have].notna().any(axis=1)]
+    if volume is not None:
+        volume = volume.loc[volume.index.isin(prices.index)]
+    ny = datetime.now(ZoneInfo("America/New_York"))
+    wib = datetime.now(ZoneInfo("Asia/Jakarta"))
+    last = prices.index[-1].strftime("%Y-%m-%d")
+    if last != ny.date().isoformat():
+        log(f"Belum ada harga hari ini (data terakhir {last}); kemungkinan bursa libur")
+        summary(f"### Update jam bursa dilewati\nHarga terakhir {last}, belum ada perdagangan hari ini.")
+        return
+    n = 0
+    for r in rows:
+        c = r["ticker"]
+        if c not in prices or not prices[c].notna().any():
+            continue
+        t = technicals(prices[c])
+        r.update({k: v for k, v in t.items() if v is not None})
+        n += 1
+    prev["stocks"] = [clean(r) for r in rows]
+    prev["intraday"] = {"at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "date": last,
+                        "wib": wib.strftime("%H.%M"), "et": ny.strftime("%H.%M")}
+    OUT_FILE.write_text(json.dumps(prev, separators=(",", ":")))
+    import notify_telegram
+
+    vix = float(prices["^VIX"].dropna().iloc[-1]) if "^VIX" in prices and prices["^VIX"].notna().any() else None
+    run_cycles(prices, {"S&P 500": "^GSPC", "Nasdaq-100": "^NDX"},
+               {"ramadan": False, "holidays": set(notify_telegram.HOLIDAYS), "vix_for": "S&P 500"},
+               tickers, tickers, vix=vix, persist=False)
+    try:
+        ym = {yahoo_symbol(t): t for t in tickers + INDICES}
+        ohlc.write(DATA / "ohlc", prices, volume, tickers, {"S&P 500": "^GSPC", "Nasdaq-100": "^NDX"}, rename=lambda c: ym.get(c, c), decimals=2)
+    except Exception as e:
+        log(f"  data candlestick gagal: {e}")
+    try:  # pesan Telegram (tanpa bunyi): saham yang baru masuk / hampir sampai area beli, sekali per hari
+        nf_ = DATA / "intraday_note.json"
+        note = json.loads(nf_.read_text()) if nf_.exists() else {}
+        if note.get("date") != last:
+            note = {"date": last, "sent": []}
+        d = json.loads(OUT_FILE.read_text())
+        L, keys = notify_telegram.near_lines(d, set(note.get("sent") or []))
+        note["sent"] = (note.get("sent") or []) + keys
+        note["msg"] = "\n".join([f"⏱️ <b>Harga sementara {wib.strftime('%H.%M')} WIB ({ny.strftime('%H.%M')} New York)</b> · area beli 🇺🇸", *L,
+                                  "<i>Pertimbangkan memasang order limit di harga area beli. Harga tertunda beberapa menit.</i>"]) if L else None
+        note["at"] = prev["intraday"]["at"]
+        nf_.write_text(json.dumps(note, ensure_ascii=False))
+        log(f"Catatan jam bursa: {len(L)} saham area beli baru/hampir sampai")
+    except Exception as e:
+        log(f"  catatan jam bursa gagal: {e}")
+    summary(f"### Update jam bursa berhasil\n- {n} saham, harga sementara {last} pukul {ny.strftime('%H.%M')} New York\n- Lama proses: {(time.time() - t0) / 60:.1f} menit")
+
+
 if __name__ == "__main__":
     try:
-        main()
+        intraday() if os.environ.get("INTRADAY") == "1" else main()
     except SystemExit as e:
         if e.code not in (0, None):
             summary(f"### Gagal\n{e.code}")
