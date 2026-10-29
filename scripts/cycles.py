@@ -24,6 +24,10 @@ import pandas as pd
 FIB_RET = [0.236, 0.382, 0.5, 0.618, 0.786]
 FIB_EXT = [1.272, 1.618]
 FIB_TIME = [13, 21, 34, 55, 89, 144]
+# Pengaturan pasar (diubah oleh fetch_kripto.py): kripto diperdagangkan setiap hari, harga koin bisa sangat kecil.
+ALLDAYS = False   # True = semua hari kalender dihitung hari perdagangan
+SIG = None        # angka penting minimum untuk harga kecil (mis. 5)
+WEEK = 5          # hari perdagangan per minggu
 NEAR = 2          # toleransi hari bursa untuk "tepat"
 HORIZON = 92      # hari kalender ke depan untuk kalender
 TEST_FROM = "2005-01-01"
@@ -36,7 +40,11 @@ def ok(v):
 
 
 def r(v, d=2):
-    return round(float(v), d) if ok(v) else None
+    if not ok(v):
+        return None
+    if SIG and v != 0 and abs(v) < 10 ** (SIG - d - 1):
+        d = max(d, SIG - 1 - math.floor(math.log10(abs(v))))
+    return round(float(v), d)
 
 
 # ---------------------------------------------------------------- ZigZag
@@ -341,7 +349,7 @@ def trading_days(start: date, n: int, holidays: set[str]) -> list[date]:
     out, d = [], start
     while len(out) < n:
         d += timedelta(days=1)
-        if d.weekday() < 5 and d.isoformat() not in holidays:
+        if (ALLDAYS or d.weekday() < 5) and d.isoformat() not in holidays:
             out.append(d)
     return out
 
@@ -364,7 +372,7 @@ def calendar(s: pd.Series, piv, cfg: dict, today: date):
                            "what": f"{f} hari bursa dari {'puncak' if t == 'H' else 'lembah'} {idx[i].date().strftime('%d/%m/%Y')}"})
     for d in fut:
         nxt = d + timedelta(days=1)
-        while nxt.weekday() >= 5 or nxt.isoformat() in cfg.get("holidays", set()):
+        while (not ALLDAYS and nxt.weekday() >= 5) or nxt.isoformat() in cfg.get("holidays", set()):
             nxt += timedelta(days=1)
         if nxt.month != d.month:
             ev.append({"d": d.isoformat(), "type": "musiman", "what": "Hari terakhir bulan (awal efek pergantian bulan)"})
@@ -407,7 +415,7 @@ def calendar(s: pd.Series, piv, cfg: dict, today: date):
 def weekly_range(s: pd.Series, vix: float | None = None):
     s = s.dropna()
     p = float(s.iloc[-1])
-    sig = float(np.log(s).diff().dropna().tail(60).std() * math.sqrt(5))
+    sig = float(np.log(s).diff().dropna().tail(60).std() * math.sqrt(WEEK))
     out = {"price": r(p), "sigma": round(sig * 100, 2), "r68": [r(p * math.exp(-sig)), r(p * math.exp(sig))],
            "r95": [r(p * math.exp(-2 * sig)), r(p * math.exp(2 * sig))]}
     if ok(vix):
@@ -600,7 +608,7 @@ def run(close: pd.DataFrame, indices: dict[str, str], long: dict[str, pd.Series]
         a["tz"] = sorted(tz)[:8]
         out["stocks"][t] = a
         vals = close[t].iloc[-260:]
-        series["stocks"][t] = [None if not ok(x) else (int(round(x)) if tick else round(float(x), 2)) for x in vals.tolist()]
+        series["stocks"][t] = [None if not ok(x) else (int(round(x)) if tick else r(float(x))) for x in vals.tolist()]
     out["breadth"] = breadth(close, breadth_cols)
     out["watch"] = watch(out["stocks"], state, today, tick)
     return out, series

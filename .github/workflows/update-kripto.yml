@@ -1,0 +1,51 @@
+name: Update data kripto
+
+on:
+  schedule:
+    # Tiap jam, menit 23 (jam 00.23 UTC = 07.23 WIB: pertama setelah candle harian ditutup -> ringkasan pagi).
+    - cron: "23 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-kripto
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Pasang paket
+        run: pip install -r requirements.txt
+
+      - name: Ambil harga dan hitung metode kripto
+        run: python scripts/fetch_kripto.py
+
+      - name: Pesan Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python scripts/notify_kripto.py || echo "Pesan Telegram gagal (data tetap disimpan)"
+
+      - name: Simpan ke repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add kripto/data
+          if git diff --cached --quiet; then echo "Tidak ada perubahan"; exit 0; fi
+          git commit -q -m "Update data kripto $(date -u +%Y-%m-%dT%H:%M)"
+          for i in 1 2 3 4 5; do
+            git pull --rebase -q origin main && git push -q && exit 0
+            sleep $((i * 7))
+          done
+          exit 1
