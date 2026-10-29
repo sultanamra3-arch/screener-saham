@@ -435,7 +435,7 @@ const nf = (v,d=2) => (NFC[d]||(NFC[d]=new Intl.NumberFormat("id-ID",{minimumFra
 const MORE={}; const moreRow=()=>"";
 const decOf = v => { v=Math.abs(v); if(!v) return 0; return v>=1000?0:v>=1?2:Math.min(8,3-Math.floor(Math.log10(v||1e-9))); };
 const usd = v => v==null||!isFinite(v) ? "–" : "Rp"+nf(v, decOf(v));
-const rpM = v => v==null||!isFinite(v) ? "–" : "Rp"+nf(v, Math.abs(v)<10?2:0);
+const rpM = v => v==null||!isFinite(v) ? "–" : "Rp"+nf(v, v&&Math.abs(v)<10?2:0);
 const rpBig = v => v==null||!isFinite(v) ? "–" : v>=1e12?"Rp"+nf(v/1e12,v>=1e13?0:1)+" T":v>=1e9?"Rp"+nf(v/1e9,v>=1e10?0:1)+" M":v>=1e6?"Rp"+nf(v/1e6,0)+" jt":"Rp"+nf(v,0);
 const usdx = v => v==null||!isFinite(v) ? "–" : "$"+nf(v, v>=1000?0:v>=1?2:Math.min(8,3-Math.floor(Math.log10(v))));
 const qtyTx = q => q==null||!isFinite(q) ? "–" : nf(q, q>=1000?0:q>=1?4:Math.min(8,4-Math.floor(Math.log10(q||1e-9))));
