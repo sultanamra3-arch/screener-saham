@@ -1051,7 +1051,7 @@ function renderMethod(box,m){
     +(cand.length?sec(`⏳ Calon pada cek berikutnya (${cand.length})`,"Sudah memenuhi semua syarat; dibeli pada cek Senin bila masih 5 teratas dan ada slot.",cand,""):"")
     +(sold.length?sec(`👋 Baru dijual (${sold.length})`,"Dijual dalam 7 hari terakhir.",sold,""):"")
     +sec("Koin lain, urut peringkat kenaikan 90 hari","",rest,"–");
-  if(mo.eq&&mo.eq.length) loadLWC().then(()=>{ if(tab!==m.id) return; const el=$("momEq"); if(!el||!window.LightweightCharts) return; cyCharts.forEach(c=>{try{c.remove()}catch(e){}}); cyCharts=[];
+  if(mo.eq&&mo.eq.length) loadLWC().then(()=>{ if(tab!==m.id) return; const el=$("momEq"); if(!el||!window.LightweightCharts) return; cyObs.forEach(o=>o.disconnect()); cyObs=[]; cyCharts.forEach(c=>{try{c.remove()}catch(e){}}); cyCharts=[];
     const line=cssVar("--line"), muted=cssVar("--muted"), acc=cssVar("--accent");
     const ch=LightweightCharts.createChart(el,{height:180,layout:{background:{type:"solid",color:"transparent"},textColor:muted},grid:{vertLines:{visible:false},horzLines:{color:line}},rightPriceScale:{borderColor:line,mode:1},timeScale:{borderColor:line},handleScroll:false,handleScale:false});
     cyCharts.push(ch); const s=ch.addAreaSeries({lineColor:acc,topColor:acc+"44",bottomColor:acc+"05",lineWidth:2,priceLineVisible:false,priceFormat:{type:"price",precision:2,minMove:0.01}});
