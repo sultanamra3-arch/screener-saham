@@ -17,6 +17,11 @@ jobs:
   update:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+      FTP_DIR: ${{ secrets.FTP_DIR }}
     steps:
       - uses: actions/checkout@v5
 
@@ -36,6 +41,16 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python scripts/notify_kripto.py || echo "Pesan Telegram gagal (data tetap disimpan)"
+
+      - name: Kirim salinan ke chartflow.my.id/app/kripto (bila FTP sudah diatur)
+        if: env.FTP_SERVER != ''
+        run: |
+          python scripts/build_chartflow_app.py kripto out_app
+          sudo apt-get install -y -qq lftp > /dev/null
+          LFTP_PASSWORD="$FTP_PASSWORD" lftp -c "set ftp:ssl-allow yes; set ssl:verify-certificate no; set net:max-retries 3; set net:timeout 30; \
+            open --env-password -u \"$FTP_USERNAME\" \"$FTP_SERVER\"; \
+            mkdir -p -f ${FTP_DIR:-.}/_appfiles/kripto; mirror -R --parallel=4 out_app ${FTP_DIR:-.}/_appfiles/kripto" || echo "Kirim FTP gagal"
+          rm -rf out_app out_app_pub
 
       - name: Simpan ke repository
         run: |
