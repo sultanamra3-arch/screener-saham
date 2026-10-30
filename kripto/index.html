@@ -1043,6 +1043,13 @@ const SV={g:"🟢",y:"🟡",r:"🔴",o:"💼",n:"⚪"};
 function svBox(c,title,lines,foot){ return `<div class="sv"><div class="svh sv-${c}">${SV[c]} ${title}</div>${lines.length?`<ul class="sl">${lines.map(l=>`<li>${l}</li>`).join("")}</ul>`:""}${foot?`<p class="note" style="margin:6px 0 0">${foot}</p>`:""}</div>`; }
 
 // ---------- Saran: bahasa sehari-hari (kripto) ----------
+function momRisk(){ const R=LT&&LT.mom; if(!R) return "";
+  const ym=x=>{ const [y,m]=x.split("-"); return ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"][+m-1]+" "+y; };
+  return `<div class="mcard" style="margin-top:12px;border-left:4px solid var(--bad);gap:6px"><h4><span>⚠️ Risiko: uji ${R.from.slice(0,4)}–${R.to.slice(0,4)} (${LT.trend?nf(LT.trend.n,0):"±120"} koin)</span></h4>
+    <div class="tablebox"><table class="nocard"><thead><tr><th>Saat Bitcoin jatuh</th><th class="num">Bitcoin</th><th class="num">Momentum 90 hari</th></tr></thead><tbody>
+    ${R.crash.map(c=>`<tr><td>${ym(c.a)} – ${ym(c.b)}</td><td class="num no">${pct(c.btc,0)}</td><td class="num ${c.mom>=0?"ok":"no"}">${pct(c.mom,0)}</td></tr>`).join("")}</tbody></table></div>
+    <p style="margin:0;font-size:14px">Lampu BTC menolong saat Bitcoin jatuh. Tapi penurunan <b>terdalam justru ${pct(R.dd,0)}</b>, terjadi di ${Object.entries(R.bad).map(([y,v])=>`${y} (${pct(v,0)})`).join(" dan ")} ketika Bitcoin naik tetapi koin lain melemah. Rata-rata ${pct(R.cagr,1)}/tahun, dibanding simpan Bitcoin ${pct(R.btc_cagr,1)}/tahun (turun terdalam ${pct(R.btc_dd,0)}).</p>
+    <p class="note">${T("Artinya: dari Rp10 juta, pernah tinggal sekitar Rp1,3 juta, dan sampai sekarang belum kembali ke puncaknya. Hanya pakai uang yang benar-benar siap hilang sebagian besar.","Kripto berisiko sangat tinggi; nilai dapat turun sebagian besar. Hasil masa lalu tidak menjamin hasil berikutnya.")} Uji memakai koin yang masih ada hari ini, jadi hasil sebenarnya lebih rendah.</p></div>`; }
 function regime(){ const L=lamp(); return {k:L.g50==null?"campuran":L.g50?"naik":"tertekan", L}; }
 function lampSince(L){ if(!L.since) return ""; const d=Math.round((Date.now()-new Date(L.since))/864e5); return d<=1?"sejak kemarin":`sejak ${tgl(L.since)} (${d} hari)`; }
 function saranMarket(opt){
@@ -1173,6 +1180,7 @@ function renderMethod(box,m){
   box.innerHTML=saranBox(saranMarket().head+`<ul class="sl"><li>📅 Dicek seminggu sekali: candle <b>Senin</b>, hasilnya muncul <b>Selasa sekitar 07.30 WIB</b>. Berikutnya: ${tgl(mo.next,1)}.</li>
       <li>⚖️ ${T("Bagi dana kripto jadi 5 bagian sama besar, satu bagian per koin.","Aturan metode: dana dibagi 5 bagian sama besar, satu per koin.")}</li>
       <li>⚠️ Metode ini bisa turun sangat dalam (terdalam ${pct(mo.dd,0)}) dan 2024–2025 hasilnya jelek. ${T("Pakai uang yang siap ditinggal lama.","Risikonya tinggi.")}</li></ul>`)
+    +momRisk()
     +`<div class="mcard" style="margin-top:12px"><h4><span>📊 Hasil simulasi per tahun</span><span class="note" style="font-weight:400">sejak ${tgl(mo.from,1)}, setelah biaya</span></h4>
       <div class="statgrid">${Object.entries(yr).map(([y,v])=>`<div>${esc(y)}${(+y===new Date().getFullYear())?" (berjalan)":""}<b class="${v>=0?"ok":"no"}">${pct(v,0)}</b></div>`).join("")}</div>
       <div id="momEq" style="width:100%;height:180px;margin-top:8px"></div>
@@ -1697,6 +1705,7 @@ document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==
 window.addEventListener("online",()=>autoCheck(true));
 // ---------- boot ----------
 renderAll();
+fetch("data/longtest.json",{cache:"no-cache"}).then(r=>r.ok?r.json():null).then(j=>{ if(j){ LT=j; if(DATA) renderAll(); } }).catch(()=>{});
 fetch("data/stocks.json",{cache:"no-cache"}).then(r=>{ if(!r.ok) throw new Error(r.status); return r.json() }).then(d=>{
   DATA=d; rows=(d.stocks||[]).filter(s=>s&&s.ticker);
   const secs=[...new Set(rows.map(r=>r.sector).filter(Boolean))].sort();

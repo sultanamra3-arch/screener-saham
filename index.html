@@ -570,7 +570,14 @@ function renderTabs(){
   }).join("");
 }
 const ltYrs=()=>LT&&LT.from?`${LT.from.slice(0,4)}–${LT.to.slice(0,4)}`:"";
-function ltBlock(mid){ const L=LT&&LT.methods&&LT.methods[mid]; if(!L) return "";
+function ltInv(mid){ if(!LT||!["value","growth","quality","dividend"].includes(mid)) return "";
+  const D=LT.div;
+  if(mid==="dividend"&&D) return `<div class="rules"><h3>Uji mundur ${D.from}–${D.to} (aturan utama)</h3><div class="statgrid">
+    <div>Per tahun<b class="ok">${pct(D.cagr,1)}</b></div><div>Rata-rata saham likuid<b>${pct(D.bench,1)}</b></div>
+    <div>Turun terdalam 2021–26<b class="no">${nf(D.dd2[0],0)}%</b></div><div>Saham likuid 2021–26<b class="no">${nf(D.dd2[1],0)}%</b></div></div>
+    <p class="note">Yield ≥4%, dividen naik 5 tahun, dan Chowder, dicek tiap awal bulan (rata-rata ${D.npos} saham), termasuk dividen dan biaya. Syarat payout dan laba tidak ikut diuji karena riwayatnya tidak tersedia. Hasilnya: kira-kira sama dengan rata-rata saham, tetapi lebih tahan saat pasar jatuh (2026: ${pct(D.y2026[0],0)} dibanding ${pct(D.y2026[1],0)}).</p></div>`;
+  return `<div class="rules"><h3>Uji mundur jangka panjang</h3><p class="note">Belum bisa diuji: metode ini butuh riwayat laporan keuangan (utang, arus kas, margin, nilai buku) yang hanya tersedia ±4 tahun. Sinyalnya dicatat maju sejak ${DATA&&DATA.started?tgl(DATA.started,1):"Oktober 2026"} supaya hasilnya bisa dinilai nanti.</p></div>`; }
+function ltBlock(mid){ const L=LT&&LT.methods&&LT.methods[mid]; if(!L) return IS_ID?ltInv(mid):"";
   const bad=L.avg<0, yrs=ltYrs();
   return `<div class="rules"${bad?' style="border-left:4px solid var(--bad);padding-left:10px"':""}><h3>Uji mundur ${yrs} (${nf(LT.n,0)} saham)</h3>${bad?`<p><b class="no">⚠️ Tidak lolos uji ${yrs}.</b> ${T("Rata-rata rugi setelah biaya, jadi metode ini tidak dipakai di Saran dan Area beli.","Rata-rata hasil negatif setelah biaya; tidak dipakai di Keterangan dan Area beli.")}</p>`:""}<div class="statgrid">
     <div>Transaksi<b>${nf(L.n,0)}</b></div><div>Untung<b>${nf(L.win,0)}%</b></div>
@@ -596,7 +603,7 @@ function renderRail(){
     <div class="rules"><h3>Kapan beli</h3><ul>${m.entry.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>
     <div class="rules"><h3>Kapan jual</h3><ul>${m.exit.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>
     <div class="rules"><h3>Kenapa aturan ini</h3><p class="note" style="font-size:13.5px">${esc(m.why)}</p></div>
-    ${m.kind==="tr"?statBlock(m.id):`<p class="note">Posisi investor dicatat maju sejak ${tgl(DATA&&DATA.started,1)}, karena aturan jualnya butuh riwayat (misalnya 2 tahun Graham).</p>`}
+    ${m.kind==="tr"?statBlock(m.id):(IS_ID?ltInv(m.id):"")+`<p class="note">Posisi investor dicatat maju sejak ${tgl(DATA&&DATA.started,1)}, karena aturan jualnya butuh riwayat (misalnya 2 tahun Graham).</p>`}
     ${m.id==="momentum"&&DATA&&DATA.nextRebalance?`<p class="note">Pengecekan berikutnya: pembaruan pertama setelah ${tgl(DATA.nextRebalance,1)}.</p>`:""}`;
 }
 
