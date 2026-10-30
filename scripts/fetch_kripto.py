@@ -496,7 +496,13 @@ def main():
         ts = OUT / "trend_stats.json"
         last_done = done.index[-1].strftime("%Y-%m-%d")
         if not ts.exists() or json.loads(ts.read_text()).get("date") != last_done:
-            trend.run(OUT, FEE * 2, skip_last=True, log=log)
+            # riwayat panjang (±4 tahun) supaya hasil uji kripto lebih bisa dipercaya
+            hist = {}
+            for t in cols:
+                d = pd.DataFrame({"h": H[t], "l": L[t], "c": C[t]}).loc[:done.index[-1]].dropna().tail(1500)
+                if len(d) > 200 and (d.to_numpy() > 0).all():
+                    hist[t] = ([x.strftime("%Y-%m-%d") for x in d.index], d.to_numpy(float))
+            trend.run(OUT, FEE * 2, log=log, data=hist or None)
     except Exception as e:
         log(f"Garis tren gagal: {e}")
     prev = json.loads(OUT_FILE.read_text()) if OUT_FILE.exists() else {}
