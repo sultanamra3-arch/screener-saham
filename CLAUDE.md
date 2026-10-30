@@ -16,3 +16,6 @@ Teks di halaman depan dibaca orang lain: pakai bahasa aman (keterangan aturan, b
 - Pemilik berkomunikasi dalam bahasa Indonesia. Usulkan rencana dulu; bangun setelah pemilik bilang "siap"/"ya"/"mau". Perbaikan bug yang jelas boleh langsung dikerjakan.
 - Jangan pernah meminta atau menulis token, password FTP, atau kunci API di chat atau di repo; semuanya ada di GitHub Secrets.
 - Jangan commit `signing.keystore` atau `signing-key-info.txt`.
+
+## Halaman Kripto
+`kripto/index.html` dibuat otomatis: sumbernya `kbuild/*.js` + bagian bersama dari `index.html`. Ubah `kbuild/`, lalu jalankan `python3 kbuild/assemble.py` (juga setelah mengubah bagian grafik/siklus di `index.html`). Jangan edit `kripto/index.html` langsung.
