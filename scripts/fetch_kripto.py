@@ -491,6 +491,14 @@ def main():
     for f in OHLC_DIR.glob("*.json"):
         if f.stem not in keep:
             f.unlink()
+    try:  # garis tren: statistik & rekam jejak, sekali setiap candle harian baru (candle hari ini belum selesai)
+        import trend
+        ts = OUT / "trend_stats.json"
+        last_done = done.index[-1].strftime("%Y-%m-%d")
+        if not ts.exists() or json.loads(ts.read_text()).get("date") != last_done:
+            trend.run(OUT, FEE * 2, skip_last=True, log=log)
+    except Exception as e:
+        log(f"Garis tren gagal: {e}")
     prev = json.loads(OUT_FILE.read_text()) if OUT_FILE.exists() else {}
     wib = now.astimezone(timezone(timedelta(hours=7)))
     d_ = {

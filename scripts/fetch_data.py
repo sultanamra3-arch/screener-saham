@@ -734,6 +734,8 @@ def main():
             log(f"Data candlestick: {n} file")
         except Exception as e:
             log(f"  data candlestick gagal: {e}")
+        import trend
+        trend.run(DATA, 0.0005, skip=("S_P_500", "Nasdaq_100"), log=log)  # garis tren: statistik & rekam jejak sinyal
         _track(False, (0.0, 0.0))
     log(f"Selesai: {len(rows)} saham, {len(missing)} tanpa fundamental -> {OUT_FILE.relative_to(ROOT)}")
     summary(f"### Berhasil\n- {len(rows)} saham diperbarui (harga penutupan {day})\n- {len(missing)} saham tanpa data fundamental\n"
