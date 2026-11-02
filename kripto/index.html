@@ -1323,12 +1323,24 @@ function posEval(ps){
     else if(ps.code!=="BTC"&&L.g50===false) acts.push({lv:2,ic:"🔴",t:"Lampu BTC merah: jangan menambah posisi"});
     if(CYC&&CYC.watch&&(CYC.watch.broken||[]).some(b=>b.t===ps.code)) acts.push({lv:1,ic:"🧱",t:"support yang tadinya menahan harga sudah jebol"});
   }
+  // batas rugi & target otomatis bila tidak diisi (sama seperti portofolio saham)
+  const z=o?nearZones(ps.code):null; let stop=ps.stop||null, target=ps.target||null, sSrc=ps.stop?"Anda":"", tSrc=ps.target?"Anda":"";
+  if(o&&p!=null){ const ma50=(mget(o,"mom90").lv||{}).exit;
+    if(!stop){ if(ps.method==="btc200"&&ps.code==="BTC"&&L.s200){ stop=L.s200; sSrc="rata-rata 200 hari BTC"; }
+      else if(ps.method==="mom90"&&ma50){ stop=ma50; sSrc="rata-rata 50 hari"; }
+      else if(z&&z.s&&z.s.lo<p){ stop=floorTick(z.s.lo*0.99); sSrc="di bawah support S1"; } }
+    if(!target&&z&&z.r&&z.r.lo>ps.price){ target=z.r.lo; tSrc="resistance R1"; }
+    if(!ps.stop&&stop&&p<stop&&ps.method==="support") acts.push({lv:0,ic:"🛑",t:`harga di bawah batas support ${usd(stop)}: aturan Watchlist menjual`});
+    if(!ps.target&&target&&p>=target*0.99) acts.push({lv:2,ic:"🧱",t:`sudah di resistance R1 ${usd(target)}: kenaikan bisa tertahan, pertimbangkan ambil sebagian untung`}); }
   acts.sort((a,b)=>a.lv-b.lv);
-  return {o,p,cost,val,pl,plp,acts};
+  return {o,p,cost,val,pl,plp,acts,stop,target,sSrc,tSrc,z};
 }
+function statusOf(e){ if(!e.acts.length) return ['<span class="st buy">✅ tahan</span>',9];
+  const a=e.acts[0], cls=a.lv<=1?"sell":a.lv===2?"hold":"wait"; return [`<span class="st ${cls}">${a.ic} ${a.lv<=1?(a.lv===0?"jual":"perlu tindakan"):"perhatikan"}</span>`,a.lv]; }
 function journalStats(C){ if(!C.length) return null; const r=C.map(x=>x.ret); const w=r.filter(x=>x>0);
   return {n:C.length,win:w.length,avg:r.reduce((a,b)=>a+b,0)/C.length,pl:C.reduce((a,x)=>a+(x.pl||0),0)}; }
 function renderPorto(box){
+  if(!CYC&&!CYC_ERR) loadCycles().then(()=>{ if(tab==="porto") renderResults(); }); // zona support/resistance untuk stop & target
   const P=porto(), E=P.open.map(ps=>({ps,e:posEval(ps)}));
   const tot=E.reduce((a,x)=>({c:a.c+x.e.cost,v:a.v+(x.e.val!=null?x.e.val*(1-fee()):x.e.cost)}),{c:0,v:0});
   const J=journalStats(P.closed), pre=(()=>{ try{ return JSON.parse(store.get(WP+"porto.pre")||"null"); }catch(e){ return null; } })(); if(pre) store.set(WP+"porto.pre","");
@@ -1340,13 +1352,13 @@ function renderPorto(box){
         <div>Untung/rugi berjalan<b class="${tot.v>=tot.c?"ok":"no"}">${tot.c?pct((tot.v/tot.c-1)*100,1):"–"}</b></div>
         <div>Sudah direalisasi<b class="${J&&J.pl>=0?"ok":"no"}">${J?(J.pl>=0?"+":"−")+rpM(Math.abs(J.pl)):"–"}</b></div></div></div>
     <div class="rhead" style="margin-top:14px"><div class="l"><h2>Posisi terbuka (${E.length})</h2><p class="note">Harga dunia dalam Rupiah. Untung/rugi sudah dipotong perkiraan biaya jual ${nf(fee()*100,2)}%.</p></div></div>
-    <div class="tablebox"><table><thead><tr><th>Koin</th><th class="num">Jumlah</th><th class="num">Harga beli</th><th class="num">Harga sekarang</th><th class="num">Nilai</th><th class="num">Untung/rugi</th><th>Status</th><th></th></tr></thead><tbody>
-    ${E.length?E.map(({ps,e},i)=>`<tr class="row" data-t="${esc(ps.code)}" tabindex="0"><td><span class="tk">${esc(ps.code)}</span><span class="nm">${tgl(ps.date,1)} · ${esc(PMN[ps.method]||"")}${ps.note?" · "+esc(ps.note):""}</span></td>
-      <td class="num">${qtyTx(ps.qty)}</td><td class="num">${usd(ps.price)}<br><span class="note">${rpM(ps.qty*ps.price)}</span></td><td class="num">${usd(e.p)}</td><td class="num">${rpM(e.val)}</td>
+    <div class="tablebox"><table><thead><tr><th>Koin</th><th class="num">Harga beli</th><th class="num">Modal · nilai</th><th class="num">Untung/rugi</th><th class="num">Stop · target</th><th>Status</th><th></th></tr></thead><tbody>
+    ${E.length?E.map((x,i)=>({...x,i})).sort((a,b)=>statusOf(a.e)[1]-statusOf(b.e)[1]).map(({ps,e,i})=>`<tr class="row" data-t="${esc(ps.code)}" tabindex="0"><td><span class="tk">${esc(ps.code)}</span><span class="nm">${qtyTx(ps.qty)} koin · ${tgl(ps.date,1)}</span><span class="nm">${esc(PMN[ps.method]||"")}${ps.note?" · "+esc(ps.note):""}</span></td><td class="num">${usd(ps.price)}<br><span class="note">${e.p!=null?"kini "+usd(e.p):""}</span></td><td class="num">${rpM(ps.qty*ps.price)}<br><span class="note">${e.val!=null?"nilai "+rpM(e.val):""}</span></td>
       <td class="num ${e.pl>=0?"ok":"no"}">${e.pl!=null?(e.pl>=0?"+":"−")+rpM(Math.abs(e.pl)):"–"}<br>${pct(e.plp)}</td>
-      <td style="font-size:13px">${e.acts.length?e.acts.map(a=>`<span class="${a.lv===0?"no":a.lv===1?"":"note"}">${a.ic} ${esc(a.t)}</span>`).join("<br>"):'<span class="st buy">✅ tahan</span>'}</td>
+      <td class="num">${e.stop?`<span class="no">${usd(e.stop)}</span><br><span class="note">${esc(e.sSrc)}</span>`:"–"}${e.target?`<br><span class="ok">${usd(e.target)}</span><br><span class="note">${esc(e.tSrc)}</span>`:""}</td>
+      <td style="font-size:13px;min-width:210px">${statusOf(e)[0]}${e.acts.length?`<div class="note" style="margin-top:4px">${e.acts.map(a=>`<span class="${a.lv===0?"no":""}">${a.ic} ${esc(a.t)}</span>`).join("<br>")}</div>`:""}${e.z&&e.p?`<div class="note" style="margin-top:4px">${e.z.s?`S1 ${usd(e.z.s.lo)}–${usd(e.z.s.hi)}`:""}${e.z.s&&e.z.r?" · ":""}${e.z.r?`R1 ${usd(e.z.r.lo)}`:""}</div>`:""}</td>
       <td><button type="button" class="calcbtn" data-sell="${i}">Jual</button></td></tr>`).join("")
-      :`<tr><td colspan="8" class="empty">Belum ada posisi. Catat pembelian Anda di bawah.</td></tr>`}</tbody></table></div>
+      :`<tr><td colspan="7" class="empty">Belum ada posisi. Catat pembelian Anda di bawah.</td></tr>`}</tbody></table></div>
     <form class="mcard" id="pForm" style="margin-top:14px"><h4><span>➕ Catat pembelian</span></h4>
       <div class="cgrid">
         <label class="cf"><span>Koin</span><input id="p_code" list="pList" required value="${esc(pc0?pc0.ticker:"")}" placeholder="mis. ETH" style="text-transform:uppercase" autocomplete="off"><datalist id="pList">${opts}</datalist></label>
