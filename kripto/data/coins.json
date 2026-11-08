@@ -1,524 +1,524 @@
 {
-"date": "2026-11-07",
+"date": "2026-11-08",
 "coins": [
 {
 "t": "BTC",
 "name": "Bitcoin",
 "rank": 1,
-"mcap": 1524153016116,
-"cgp": 75799,
+"mcap": 1522208035680,
+"cgp": 75697,
 "cat": "Layer 1"
 },
 {
 "t": "ETH",
 "name": "Ethereum",
 "rank": 2,
-"mcap": 273644241310,
-"cgp": 2239.41,
+"mcap": 272767813075,
+"cgp": 2232.18,
 "cat": "Layer 1"
 },
 {
 "t": "BNB",
 "name": "BNB",
 "rank": 4,
-"mcap": 91263097358,
-"cgp": 693.96,
+"mcap": 91386759734,
+"cgp": 694.9,
 "cat": "Exchange"
 },
 {
 "t": "XRP",
 "name": "XRP",
 "rank": 5,
-"mcap": 74758375142,
-"cgp": 1.18,
+"mcap": 73666774763,
+"cgp": 1.16,
 "cat": "Pembayaran"
 },
 {
 "t": "SOL",
 "name": "Solana",
 "rank": 7,
-"mcap": 53302031969,
-"cgp": 90.19,
+"mcap": 52779953518,
+"cgp": 89.3,
 "cat": "Layer 1"
 },
 {
 "t": "TRX",
 "name": "TRON",
 "rank": 8,
-"mcap": 30206068787,
-"cgp": 0.317866,
+"mcap": 30429656622,
+"cgp": 0.320215,
 "cat": "Layer 1"
 },
 {
 "t": "HYPE",
 "name": "Hyperliquid",
 "rank": 11,
-"mcap": 18868721840,
-"cgp": 78.81,
+"mcap": 18574857810,
+"cgp": 77.59,
 "cat": "Layer 1"
 },
 {
 "t": "DOGE",
 "name": "Dogecoin",
 "rank": 13,
-"mcap": 11349840203,
-"cgp": 0.072457,
+"mcap": 11175345286,
+"cgp": 0.07134,
 "cat": "Meme"
 },
 {
 "t": "LEO",
 "name": "LEO Token",
 "rank": 16,
-"mcap": 8637001153,
-"cgp": 9.39,
+"mcap": 8562615642,
+"cgp": 9.31,
 "cat": "Exchange"
 },
 {
 "t": "LINK",
 "name": "Chainlink",
 "rank": 17,
-"mcap": 8306675626,
-"cgp": 10.83,
+"mcap": 8260567143,
+"cgp": 10.77,
 "cat": "Infrastruktur"
 },
 {
 "t": "ADA",
 "name": "Cardano",
 "rank": 18,
-"mcap": 6932859959,
-"cgp": 0.184464,
+"mcap": 6784462859,
+"cgp": 0.180516,
 "cat": "Layer 1"
 },
 {
 "t": "XLM",
 "name": "Stellar",
 "rank": 19,
-"mcap": 5435035655,
-"cgp": 0.153677,
+"mcap": 5335089835,
+"cgp": 0.150825,
 "cat": "Layer 1"
 },
 {
 "t": "BCH",
 "name": "Bitcoin Cash",
 "rank": 20,
-"mcap": 5286795717,
-"cgp": 262.85,
+"mcap": 4987245102,
+"cgp": 247.95,
 "cat": "Layer 1"
 },
 {
 "t": "NEAR",
 "name": "NEAR Protocol",
 "rank": 21,
-"mcap": 4899652620,
-"cgp": 3.74,
+"mcap": 4838348002,
+"cgp": 3.69,
 "cat": "Layer 1"
 },
 {
 "t": "UNI",
 "name": "Uniswap",
 "rank": 24,
-"mcap": 4206639370,
-"cgp": 6.92,
+"mcap": 4333992163,
+"cgp": 7.13,
 "cat": "DeFi"
 },
 {
 "t": "LTC",
 "name": "Litecoin",
-"rank": 26,
-"mcap": 4076691079,
-"cgp": 52.4,
+"rank": 25,
+"mcap": 4050884798,
+"cgp": 52.07,
 "cat": "Layer 1"
 },
 {
 "t": "AVAX",
 "name": "Avalanche",
 "rank": 28,
-"mcap": 3695411870,
-"cgp": 8.32,
+"mcap": 3654287936,
+"cgp": 8.2,
 "cat": "Layer 1"
 },
 {
 "t": "SUI",
 "name": "Sui",
 "rank": 29,
-"mcap": 3599945475,
-"cgp": 0.869753,
+"mcap": 3524014033,
+"cgp": 0.851408,
 "cat": "Layer 1"
 },
 {
 "t": "HBAR",
 "name": "Hedera",
 "rank": 33,
-"mcap": 3003873453,
-"cgp": 0.067766,
+"mcap": 2957347573,
+"cgp": 0.066716,
 "cat": "Layer 1"
 },
 {
 "t": "QNT",
 "name": "Quant",
 "rank": 34,
-"mcap": 2826038600,
-"cgp": 194.15,
+"mcap": 2832124350,
+"cgp": 194.57,
 "cat": "Infrastruktur"
 },
 {
 "t": "SHIB",
 "name": "Shiba Inu",
 "rank": 38,
-"mcap": 2672311928,
-"cgp": 4.54e-06,
+"mcap": 2635043743,
+"cgp": 4.47e-06,
 "cat": "Meme"
 },
 {
 "t": "CRO",
 "name": "Cronos",
 "rank": 40,
-"mcap": 2537778102,
-"cgp": 0.04999333,
+"mcap": 2474597219,
+"cgp": 0.04874688,
 "cat": "Exchange"
 },
 {
 "t": "OKB",
 "name": "OKB",
 "rank": 42,
-"mcap": 2212275538,
-"cgp": 105.35,
+"mcap": 2141660906,
+"cgp": 101.98,
 "cat": "Exchange"
 },
 {
 "t": "ENA",
 "name": "Ethena",
 "rank": 43,
-"mcap": 2210730662,
-"cgp": 0.163758,
+"mcap": 2112886844,
+"cgp": 0.15651,
 "cat": "DeFi"
 },
 {
 "t": "PEPE",
 "name": "Pepe",
 "rank": 45,
-"mcap": 2100983407,
-"cgp": 4.99e-06,
+"mcap": 2032586597,
+"cgp": 4.83e-06,
 "cat": "Meme"
 },
 {
 "t": "AAVE",
 "name": "Aave",
 "rank": 46,
-"mcap": 2014122427,
-"cgp": 130.45,
+"mcap": 2018111958,
+"cgp": 130.7,
 "cat": "DeFi"
 },
 {
 "t": "ONDO",
 "name": "Ondo",
-"rank": 52,
-"mcap": 1805528172,
-"cgp": 0.370796,
-"cat": "Aset dunia nyata"
-},
-{
-"t": "PUMP",
-"name": "Pump.fun",
 "rank": 53,
-"mcap": 1799320406,
-"cgp": 0.00391935,
-"cat": "Meme"
+"mcap": 1761219770,
+"cgp": 0.361696,
+"cat": "Aset dunia nyata"
 },
 {
 "t": "ASTER",
 "name": "Aster",
-"rank": 55,
-"mcap": 1757949348,
-"cgp": 0.683533,
+"rank": 54,
+"mcap": 1752500340,
+"cgp": 0.681414,
 "cat": "DeFi"
+},
+{
+"t": "PUMP",
+"name": "Pump.fun",
+"rank": 55,
+"mcap": 1676615094,
+"cgp": 0.00365313,
+"cat": "Meme"
 },
 {
 "t": "DOT",
 "name": "Polkadot",
 "rank": 57,
-"mcap": 1549462511,
-"cgp": 0.905633,
+"mcap": 1527657322,
+"cgp": 0.892811,
 "cat": "Layer 1"
 },
 {
 "t": "SKY",
 "name": "Sky",
 "rank": 59,
-"mcap": 1518770522,
-"cgp": 0.06485,
-"cat": "DeFi"
-},
-{
-"t": "MORPHO",
-"name": "Morpho",
-"rank": 60,
-"mcap": 1487664118,
-"cgp": 2.11,
-"cat": "DeFi"
-},
-{
-"t": "WLFI",
-"name": "World Liberty Financial",
-"rank": 61,
-"mcap": 1477680233,
-"cgp": 0.04649691,
+"mcap": 1496818372,
+"cgp": 0.063917,
 "cat": "DeFi"
 },
 {
 "t": "MNT",
 "name": "Mantle",
-"rank": 62,
-"mcap": 1477021399,
-"cgp": 0.447311,
+"rank": 60,
+"mcap": 1496717060,
+"cgp": 0.453275,
 "cat": "Layer 2"
+},
+{
+"t": "MORPHO",
+"name": "Morpho",
+"rank": 61,
+"mcap": 1475250555,
+"cgp": 2.1,
+"cat": "DeFi"
+},
+{
+"t": "WLFI",
+"name": "World Liberty Financial",
+"rank": 62,
+"mcap": 1470846102,
+"cgp": 0.04628183,
+"cat": "DeFi"
 },
 {
 "t": "ICP",
 "name": "Internet Computer",
 "rank": 64,
-"mcap": 1357055600,
-"cgp": 2.43,
+"mcap": 1348352854,
+"cgp": 2.42,
 "cat": "Layer 1"
 },
 {
 "t": "WLD",
 "name": "Worldcoin",
 "rank": 66,
-"mcap": 1282718663,
-"cgp": 0.342476,
+"mcap": 1239849158,
+"cgp": 0.330906,
 "cat": "AI"
 },
 {
 "t": "BGB",
 "name": "Bitget Token",
 "rank": 67,
-"mcap": 1214368913,
-"cgp": 1.73,
+"mcap": 1217503517,
+"cgp": 1.74,
 "cat": "Exchange"
-},
-{
-"t": "JST",
-"name": "JUST",
-"rank": 68,
-"mcap": 1147525228,
-"cgp": 0.143118,
-"cat": "DeFi"
 },
 {
 "t": "ARB",
 "name": "Arbitrum",
-"rank": 69,
-"mcap": 1135350336,
-"cgp": 0.164732,
+"rank": 68,
+"mcap": 1155608567,
+"cgp": 0.167671,
 "cat": "Layer 2"
+},
+{
+"t": "JST",
+"name": "JUST",
+"rank": 69,
+"mcap": 1153491830,
+"cgp": 0.143862,
+"cat": "DeFi"
 },
 {
 "t": "ETC",
 "name": "Ethereum Classic",
 "rank": 71,
-"mcap": 1115639640,
-"cgp": 7.02,
+"mcap": 1091801452,
+"cgp": 6.87,
 "cat": "Layer 1"
 },
 {
 "t": "VVV",
 "name": "Venice Token",
-"rank": 72,
-"mcap": 1024733344,
-"cgp": 20.95,
+"rank": 73,
+"mcap": 999761551,
+"cgp": 20.44,
 "cat": "Lainnya"
 },
 {
 "t": "POL",
 "name": "POL (ex-MATIC)",
 "rank": 75,
-"mcap": 977251007,
-"cgp": 0.091804,
+"mcap": 959491786,
+"cgp": 0.090131,
 "cat": "Layer 2"
 },
 {
 "t": "ALGO",
 "name": "Algorand",
 "rank": 77,
-"mcap": 872897842,
-"cgp": 0.096153,
+"mcap": 860529390,
+"cgp": 0.094789,
 "cat": "Layer 1"
 },
 {
 "t": "RENDER",
 "name": "Render",
 "rank": 80,
-"mcap": 839862451,
-"cgp": 1.57,
+"mcap": 820927523,
+"cgp": 1.54,
 "cat": "AI"
 },
 {
 "t": "INJ",
 "name": "Injective",
-"rank": 81,
-"mcap": 837274297,
-"cgp": 8.37,
+"rank": 82,
+"mcap": 816823344,
+"cgp": 8.17,
 "cat": "Layer 1"
 },
 {
 "t": "JUP",
 "name": "Jupiter",
 "rank": 83,
-"mcap": 806718507,
-"cgp": 0.243034,
+"mcap": 797424179,
+"cgp": 0.240234,
 "cat": "DeFi"
 },
 {
 "t": "ATOM",
 "name": "Cosmos Hub",
 "rank": 84,
-"mcap": 750501549,
-"cgp": 1.39,
+"mcap": 736999667,
+"cgp": 1.36,
 "cat": "Layer 1"
 },
 {
 "t": "NEXO",
 "name": "NEXO",
 "rank": 85,
-"mcap": 735003755,
-"cgp": 0.735004,
+"mcap": 730311992,
+"cgp": 0.730312,
 "cat": "Exchange"
+},
+{
+"t": "NIGHT",
+"name": "Midnight",
+"rank": 88,
+"mcap": 662131129,
+"cgp": 0.03986965,
+"cat": "Layer 1"
 },
 {
 "t": "FIL",
 "name": "Filecoin",
-"rank": 87,
-"mcap": 688828315,
-"cgp": 0.814758,
+"rank": 89,
+"mcap": 660415045,
+"cgp": 0.781074,
 "cat": "Infrastruktur"
 },
 {
 "t": "ZRO",
 "name": "LayerZero",
 "rank": 90,
-"mcap": 656711531,
-"cgp": 1.64,
+"mcap": 649217156,
+"cgp": 1.62,
 "cat": "Layer 2"
-},
-{
-"t": "NIGHT",
-"name": "Midnight",
-"rank": 91,
-"mcap": 645436570,
-"cgp": 0.0388644,
-"cat": "Layer 1"
 },
 {
 "t": "CAKE",
 "name": "PancakeSwap",
 "rank": 93,
-"mcap": 629925175,
-"cgp": 1.92,
+"mcap": 622320587,
+"cgp": 1.9,
 "cat": "DeFi"
 },
 {
 "t": "XDC",
 "name": "XDC Network",
 "rank": 94,
-"mcap": 623558275,
-"cgp": 0.03126124,
+"mcap": 616307890,
+"cgp": 0.03089775,
 "cat": "Layer 1"
 },
 {
 "t": "ETHFI",
 "name": "Ether.fi",
 "rank": 96,
-"mcap": 583847508,
-"cgp": 0.584704,
+"mcap": 591770689,
+"cgp": 0.592638,
 "cat": "DeFi"
-},
-{
-"t": "PYTH",
-"name": "Pyth Network",
-"rank": 101,
-"mcap": 520672516,
-"cgp": 0.066111,
-"cat": "Infrastruktur"
 },
 {
 "t": "FLR",
 "name": "Flare",
-"rank": 104,
-"mcap": 504350351,
-"cgp": 0.00574816,
+"rank": 103,
+"mcap": 503224752,
+"cgp": 0.00573497,
 "cat": "Layer 1"
+},
+{
+"t": "PYTH",
+"name": "Pyth Network",
+"rank": 104,
+"mcap": 501559305,
+"cgp": 0.06369,
+"cat": "Infrastruktur"
 },
 {
 "t": "RAY",
 "name": "Raydium",
 "rank": 106,
-"mcap": 484137378,
-"cgp": 1.79,
+"mcap": 487890899,
+"cgp": 1.81,
 "cat": "DeFi"
 },
 {
 "t": "VET",
 "name": "VeChain",
-"rank": 110,
-"mcap": 467057330,
-"cgp": 0.00543137,
+"rank": 111,
+"mcap": 453354981,
+"cgp": 0.00527249,
 "cat": "Layer 1"
 },
 {
 "t": "TIA",
 "name": "Celestia",
 "rank": 112,
-"mcap": 432845311,
-"cgp": 0.437401,
+"mcap": 432702128,
+"cgp": 0.437136,
 "cat": "Layer 1"
 },
 {
 "t": "CRV",
 "name": "Curve DAO",
 "rank": 113,
-"mcap": 418266701,
-"cgp": 0.263956,
+"mcap": 420542804,
+"cgp": 0.265329,
 "cat": "DeFi"
 },
 {
 "t": "PENGU",
 "name": "Pudgy Penguins",
 "rank": 114,
-"mcap": 411476127,
-"cgp": 0.00654534,
+"mcap": 399240981,
+"cgp": 0.00635123,
 "cat": "Meme"
 },
 {
 "t": "PIEVERSE",
 "name": "Pieverse",
 "rank": 115,
-"mcap": 385227439,
-"cgp": 1.4,
+"mcap": 386240477,
+"cgp": 1.41,
 "cat": "Lainnya"
 },
 {
 "t": "GRASS",
 "name": "Grass",
-"rank": 120,
-"mcap": 361902174,
-"cgp": 0.501269,
+"rank": 119,
+"mcap": 365518387,
+"cgp": 0.506285,
 "cat": "Lainnya"
 },
 {
 "t": "BSV",
 "name": "Bitcoin SV",
-"rank": 122,
-"mcap": 343759947,
-"cgp": 17.11,
+"rank": 123,
+"mcap": 334009719,
+"cgp": 16.61,
 "cat": "Layer 1"
 },
 {
 "t": "FET",
 "name": "Artificial Superintelligence Alliance",
 "rank": 124,
-"mcap": 340614841,
-"cgp": 0.147341,
+"mcap": 332275518,
+"cgp": 0.143748,
 "cat": "AI"
 }
 ]
