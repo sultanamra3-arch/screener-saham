@@ -1073,7 +1073,7 @@ function crossed(a,b,k=3){ // 1 = a memotong ke atas b dalam k bar terakhir, -1 
   const n=a.length; for(let i=n-1;i>=Math.max(1,n-k);i--){ if([a[i],b[i],a[i-1],b[i-1]].some(x=>x==null)) continue;
     if(a[i-1]<=b[i-1]&&a[i]>b[i]) return 1; if(a[i-1]>=b[i-1]&&a[i]<b[i]) return -1; } return 0; }
 const IND=[["ma20","MA20","#f59e0b",1],["ma50","MA50","#0ea5e9",1],["ma200","MA200","#e11d48",1],["ema9","EMA9","#14b8a6",0],["bb","Bollinger","#64748b",0],["vwap","VWAP 20","#a855f7",0],
-  ["vol","Volume","#94a3b8",1],["rsi","RSI","#8b5cf6",1],["macd","MACD","#2563eb",0],["srsi","Stoch RSI","#16a34a",0],["trend","Garis tren","#0f766e",1],["path","〰️ Jalur","#7c3aed",0],["fib","⏳ Waktu Fib","#ff9f1c",0]];
+  ["vol","Volume","#94a3b8",1],["rsi","RSI","#8b5cf6",1],["macd","MACD","#2563eb",0],["srsi","Stoch RSI","#16a34a",0],["trend","Garis tren","#0f766e",1],["path","〰️ Jalur","#7c3aed",0],["fib","⏳ Waktu Fib","#ff9f1c",0],["pbt","📈 Pullback Tren","#0e8a5f",0]];
 function indOn(){ let s=null; try{ s=JSON.parse(store.get(WP+"ind")||"null"); }catch(e){}
   if(Array.isArray(s)&&!store.get(WP+"ind.tr")){ if(!s.includes("trend")) s.push("trend"); store.set(WP+"ind",JSON.stringify(s)); store.set(WP+"ind.tr","1"); }
   return new Set(s||IND.filter(x=>x[3]).map(x=>x[0])); }
@@ -1320,6 +1320,8 @@ function drawChart(el, dates, vals, a, rawan, future, idr, opt){
   watchSize(ch,el,pxObs);
   infoLines(ch,s,T.concat(fut),el,opt.dkey,idr);
   if(opt.fibBox) opt.fibBox.innerHTML="";
+  if(opt.pbtBox) opt.pbtBox.innerHTML="";
+  if(on.has("pbt")&&IS_ID&&typeof PBT!=="undefined"&&PBT&&opt.dkey&&typeof pbtDraw==="function") pbtDraw(ch,T,opt.dkey,opt.pbtBox,good,bad);
   if(on.has("fib")&&opt.tz) fibDraw(ch,el,opt.tz,good,warn,opt.fibBox,isIdxU(opt));
   // panel bawah
   const P=opt.panels; const all=[ch];
@@ -1355,6 +1357,19 @@ function pastTz(a,dates,vals){ // hitung tanggal Fibonacci yang sudah lewat (unt
     const h=turns.find(x=>x[0]!==i&&Math.abs(x[0]-k)<=2), res=h?1:(k>lastI-2||k>n-3?null:0);
     out.push([D[k],f,D[i],ty,v,V[k],res,h?D[h[0]]:null,h?h[2]:null,h?h[1]:null,dir(k-3)]); }); });
   return out.sort((x,y)=>x[0]<y[0]?1:-1).slice(0,40); }
+// tanda BELI/JUAL Pullback Tren: panah tanpa teks agar tidak bertumpuk; rinciannya di daftar bawah tombol
+function pbtDraw(ch,T,t,box,good,bad){
+  const L=(PBT.trades||{})[t]||[], ts=new Set(T), op=(PBT.open||[]).find(x=>x.t===t), nw=(PBT.now||[]).find(x=>x.t===t);
+  const z=ch.addLineSeries({color:"rgba(0,0,0,0)",lineVisible:false,lastValueVisible:false,priceLineVisible:false,crosshairMarkerVisible:false,autoscaleInfoProvider:()=>null});
+  const pts={}, mk=[];
+  L.forEach(([ed,ep,xd,xp,r])=>{ if(ts.has(ed)){ pts[ed]=ep; mk.push({time:ed,position:"belowBar",color:"#0e8a5f",shape:"arrowUp"}); } if(ts.has(xd)){ pts[xd]=xp; mk.push({time:xd,position:"aboveBar",color:r>0?good:bad,shape:"arrowDown"}); } });
+  if(op&&ts.has(op.d)){ pts[op.d]=op.p; mk.push({time:op.d,position:"belowBar",color:"#0e8a5f",shape:"arrowUp",text:"BELI"}); }
+  z.setData(Object.keys(pts).sort().map(d=>({time:d,value:pts[d]}))); mk.sort((a,b)=>a.time<b.time?-1:a.time>b.time?1:0); z.setMarkers(mk);
+  if(!box) return; const w=L.filter(x=>x[4]>0).length, pc=v=>`<b class="${v>0?"ok":"no"}">${v>0?"+":""}${nf(v,1)}%</b>`;
+  box.innerHTML=`<div class="fibm" style="display:block;font-size:13px;margin:2px 0 8px"><b>📈 Pullback Tren di ${esc(t)}:</b> ${L.length?`${L.length} transaksi sejak data tersedia, ${w} untung. Panah hijau ▲ = beli, panah ▼ = jual (hijau untung, merah rugi).`:"belum ada transaksi."}
+    ${nw?` <span class="st buy">${T("Sinyal beli hari ini","Memenuhi syarat hari ini")}</span>`:""}${op?` <span class="st hold">Berjalan sejak ${tgl(op.d,1)} (${op.cur>0?"+":""}${nf(op.cur,1)}%)</span>`:""}${PBT.mkt&&!PBT.mkt.ok?` <span class="note">· sinyal baru ditunda: IHSG di bawah rata-rata ${PBT.rule.idx} hari</span>`:""}
+    ${L.length?`<details style="margin-top:4px"><summary class="note" style="cursor:pointer">Rincian transaksi</summary><div class="dl" style="margin-top:6px">${L.slice().reverse().slice(0,12).map(x=>`<div><span>${tgl(x[0],1)} ${usd(x[1])} → ${tgl(x[2],1)} ${usd(x[3])}</span><span class="num">${pc(x[4])}</span></div>`).join("")}</div></details>`:""}</div>`;
+}
 function isIdxU(opt){ return opt.isIdx?null:usd; }
 function fibDraw(ch,el,tz,good,warn,box,U){
   const ORG="#ff9f1c", GRY="#8a93a3", today=(()=>{ const n=new Date(); return new Date(n-n.getTimezoneOffset()*6e4).toISOString().slice(0,10); })();
@@ -1433,8 +1448,8 @@ function renderCycles(box){
     <div class="tablebox" id="cyBox" style="padding:10px"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:6px">
       <b>${esc(isIdx?sel:sel+(o?" · "+(o.company||""):""))} <span class="num">${usd(isIdx&&o==null?(rows.find(x=>x.ticker===sel)||{}).price||a.price:(o?o.price:a.price))}</span></b>
       <span class="legend"><span style="color:var(--good)">— support</span><span style="color:var(--bad)">— resistance</span><span style="color:var(--warn)">- - ZigZag ${nf(a.thr,1)}%</span><span style="color:#0f9d58">╱ garis tren</span>${isIdx?`<span style="color:var(--warn)">▼ tanggal rawan</span>`:""}</span></div>
-      <div class="indbar" id="indBar">${(()=>{ const on=indOn(); return IND.map(([k,n,c])=>`<button type="button" data-ind="${k}" aria-pressed="${on.has(k)}"><i style="background:${c}"></i>${n}</button>`).join(""); })()}<span class="il-sep"></span><button type="button" id="ilBtn" aria-pressed="false" title="Ukur perubahan harga antara dua titik">📏 Garis info</button><button type="button" id="tlBtn" aria-pressed="false" title="Tarik garis tren sendiri; diperpanjang ke depan">✏️ Tarik garis</button><button type="button" id="ilClr" hidden title="Hapus semua garis yang Anda buat">🗑️</button><button type="button" id="tvBtn" title="Grafik TradingView: harga real-time Binance dalam USDT, alat gambar dan indikator lengkap">📺 TradingView</button></div>
-      <div id="tvBox"></div><div id="fibMode"></div><p class="note" id="ilHint" style="margin:0 0 6px;min-height:0"></p>
+      <div class="indbar" id="indBar">${(()=>{ const on=indOn(); return IND.filter(x=>x[0]!=="pbt"||IS_ID).map(([k,n,c])=>`<button type="button" data-ind="${k}" aria-pressed="${on.has(k)}"><i style="background:${c}"></i>${n}</button>`).join(""); })()}<span class="il-sep"></span><button type="button" id="ilBtn" aria-pressed="false" title="Ukur perubahan harga antara dua titik">📏 Garis info</button><button type="button" id="tlBtn" aria-pressed="false" title="Tarik garis tren sendiri; diperpanjang ke depan">✏️ Tarik garis</button><button type="button" id="ilClr" hidden title="Hapus semua garis yang Anda buat">🗑️</button><button type="button" id="tvBtn" title="Grafik TradingView: harga real-time Binance dalam USDT, alat gambar dan indikator lengkap">📺 TradingView</button></div>
+      <div id="tvBox"></div><div id="pbtBox"></div><div id="fibMode"></div><p class="note" id="ilHint" style="margin:0 0 6px;min-height:0"></p>
       <div id="cyChart" style="width:100%;min-height:400px"></div>
       <div id="cyPanels"></div></div>
     <p class="note" style="margin:14px 2px 0;font-weight:700;letter-spacing:.04em">PENJELASAN (KETUK UNTUK MEMBUKA)</p>
@@ -1477,7 +1492,7 @@ function renderCycles(box){
   faTxt(); fa.addEventListener("click",()=>{ const all=fds().every(d=>d.open); fds().forEach(d=>d.open=!all); const sb=box.querySelector(".srbox"); if(sb){ sb.classList.toggle("sr-open",!all); store.set(WP+"fold.saran",all?"0":"1"); } setTimeout(faTxt,40); });
   box.addEventListener("toggle",ev=>{ if(ev.target.matches&&ev.target.matches("details[data-fold]")){ faTxt(); if(ev.target.open&&b&&ev.target.querySelector("#cyBreadth")&&window.LightweightCharts) drawBreadth($("cyBreadth"),b); } },true);
   $("cyQ").addEventListener("change",ev=>{ const v=ev.target.value.trim().toUpperCase(); if(CYC.stocks[v]){ store.set(WP+"cy.sel",v); renderResults(); } });
-  let bars=null; const draw=()=>drawChart($("cyChart"),SER.dates,vals,a,isIdx?(a.rawan||[]).filter(r=>(r.why||[]).some(w=>{ const k=testKey(w), t=k&&verdOf(sel,k); return !t||t.verdict!=="acak"; })):null,CYC.future,!isIdx&&usd(1).startsWith("Rp"),{bars,panels:$("cyPanels"),read:$("cyRead"),dkey:sel,isIdx,fibBox:$("fibMode"),tz:isIdx?Object.assign(idxTz(a,sel),{tzp:pastTz(a,SER.dates,vals)}):a});
+  let bars=null; const draw=()=>drawChart($("cyChart"),SER.dates,vals,a,isIdx?(a.rawan||[]).filter(r=>(r.why||[]).some(w=>{ const k=testKey(w), t=k&&verdOf(sel,k); return !t||t.verdict!=="acak"; })):null,CYC.future,!isIdx&&usd(1).startsWith("Rp"),{bars,panels:$("cyPanels"),read:$("cyRead"),dkey:sel,isIdx,fibBox:$("fibMode"),pbtBox:isIdx?null:$("pbtBox"),tz:isIdx?Object.assign(idxTz(a,sel),{tzp:pastTz(a,SER.dates,vals)}):a});
   IL_MODE=false; $("cyChart").addEventListener("fibredraw",()=>draw());
   const tvSym="BINANCE:"+sel+"USDT";
   const tvSet=on=>{ $("cyBox").classList.toggle("tv-on",on); $("tvBtn").textContent=on?"📈 Grafik ChartFlow":"📺 TradingView"; $("tvBtn").setAttribute("aria-pressed",on);
@@ -1487,7 +1502,7 @@ function renderCycles(box){
     if(ev.target.closest("#ilClr")){ if(window.__ilClear) window.__ilClear(); return; }
     const bt=ev.target.closest("[data-ind]"); if(!bt) return; const on=indOn(), k=bt.dataset.ind; on.has(k)?on.delete(k):on.add(k);
     store.set(WP+"ind",JSON.stringify([...on])); $("indBar").querySelectorAll("[data-ind]").forEach(b=>b.setAttribute("aria-pressed",on.has(b.dataset.ind))); draw(); });
-  Promise.all([loadLWC(),loadOhlc(sel),loadTrendStats()]).then(([,bb])=>{ if(tab!=="cycles") return; bars=bb; draw(); { const tb=$("trBox"); if(tb) tb.innerHTML=trendCard(); } if(store.get(WP+"tv")==="1") tvSet(true); if(b) drawBreadth($("cyBreadth"),b); })
+  Promise.all([loadLWC(),loadOhlc(sel),loadTrendStats(),typeof loadPbt==="function"?loadPbt():null]).then(([,bb])=>{ if(tab!=="cycles") return; bars=bb; draw(); { const tb=$("trBox"); if(tb) tb.innerHTML=trendCard(); } if(store.get(WP+"tv")==="1") tvSet(true); if(b) drawBreadth($("cyBreadth"),b); })
     .catch(()=>{ $("cyChart").innerHTML=`<p class="note">Grafik tidak bisa dimuat (pustaka grafik gagal diunduh).</p>`; });
 }
 
@@ -2518,6 +2533,8 @@ window.addEventListener("online",()=>autoCheck(true));
     await add(/support|resist|dekat|lantai|atap|pantul|area beli|tembus/i,()=>nearList(q));
     { const wp=PORTQ.test(q)||(portFollow&&q.length<60); portFollow=PORTQ.test(q); if(wp) S.push([0,portCtx()]); }
     try{ const v=await otherCtx(q); if(v) S.push([1,v]); }catch(e){}
+    try{ if(typeof PBT!=="undefined"&&IS_ID){ if(!PBT) await loadPbt(); const P=PBT||{}; if(P.date){ const R=P.rule||{}, ts=P.test||{};
+      S.push([/pullback|pbt|sinyal|watchlist|rsi|beli/i.test(q)?1:3,`\nPULLBACK TREN (tab Watchlist; beli: harga di atas EMA${R.ema} & EMA200, RSI${R.rsi} < ${R.rsiBuy}, IHSG di atas rata-rata ${R.idx} hari; jual: tutup di atas SMA${R.exit}, ${R.max} hari bursa, atau stop ${R.stop}%): status ${P.mkt&&P.mkt.ok?"aktif":"DITUNDA karena IHSG di bawah rata-rata "+R.idx+" hari"}. Sinyal beli hari ini: ${(P.now||[]).map(x=>x.t).join(", ")||"tidak ada"}. Posisi berjalan: ${(P.open||[]).map(x=>`${x.t} sejak ${x.d} ${x.cur}%`).join("; ")||"tidak ada"}. Uji ${ts.from}–${ts.to}: ${ts.n} transaksi, ${ts.win}% untung, rata-rata ${ts.avg}% per transaksi, 2026 ${ts.y2026}%. Transaksi terakhir: ${(P.recent||[]).slice(0,8).map(x=>`${x[0]} ${x[1]}→${x[3]} ${x[5]}%`).join("; ")}.`]); } } }catch(e){}
     S.push([2,"\nCatatan: zona support/resistance dihitung ChartFlow dari Fibonacci, titik balik, rata-rata bergerak, dan angka bulat; kekuatan: kuat/sedang/lemah."]);
     S.sort((x,y)=>x[0]-y[0]);
     let out=L.filter(Boolean).join("\n")+pg; for(const [,v] of S){ if(!v) continue; if(out.length+v.length>38000) continue; out+="\n"+v; }
