@@ -37,14 +37,14 @@
 
   /* ---- bahasa Inggris (tahap 1: menu, tombol, judul, kartu, grafik, tabel) ---- */
   var EN={
-"Screener Saham":"Stock Screener","Screener Kripto":"Crypto Screener","Beranda":"Home","Saham":"Stocks","Watchlist":"Watchlist","Portofolio":"Portfolio","Alat":"Tools","Kripto":"Crypto",
+"Screener Saham":"Stock Screener","Screener Kripto":"Crypto Screener","Beranda":"Home","Saham":"Stocks","Watchlist":"Watchlist","Sinyal":"Signals","Aksi hari ini":"Today's actions","Pullback Tren":"Trend Pullback","Tambahan · BEI":"Extra · IDX","Portofolio":"Portfolio","Alat":"Tools","Kripto":"Crypto",
 "📲 Pasang":"📲 Install","aplikasi":"app","Ringkasan":"Summary","Watchlist pribadi":"Personal watchlist","Siklus":"Cycles","Kalkulator":"Calculator","Kalender dividen":"Dividend calendar",
 "Ramai hari ini":"Busy today","📏 Hasil uji":"📏 Test results","Filter sendiri":"Custom filter","Gabungan":"Combined","Area support":"Support area","Posisi Anda":"Your positions",
 "Waktu · Fibonacci":"Time · Fibonacci","Return & risiko":"Return & risk","Ex-dividen":"Ex-dividend","Apa yang terbukti":"What is proven","Aturan Anda":"Your rules",
 "Selamat pagi":"Good morning","Selamat siang":"Good afternoon","Selamat sore":"Good afternoon","Selamat malam":"Good evening",
 "Ringkasan Bursa Efek Indonesia hari ini":"Indonesia Stock Exchange summary today","Ringkasan S&P 500 dan Nasdaq-100 hari ini":"S&P 500 and Nasdaq-100 summary today",
 "Ringkasan 50 koin terbesar di Indodax":"Summary of the 50 largest coins on Indodax","Sinyal tiap metode, lengkap dengan aturannya":"Signals for each method, with their rules",
-"Saham yang ditandai dan area belinya":"Starred stocks and their buy areas","Koin yang ditandai dan area belinya":"Starred coins and their buy areas",
+"Saham yang ditandai dan area belinya":"Starred stocks and their buy areas","Posisi perlu tindakan, sinyal tiap metode, dan saham pantauan":"Positions needing action, signals per method, and your watchlist","Grafik, siklus, kalkulator, volume, dan dividen":"Charts, cycles, calculator, volume, and dividends","Koin yang ditandai dan area belinya":"Starred coins and their buy areas",
 "Catat pembelian, pantau stop dan target":"Record purchases, track stops and targets","Kalkulator, siklus, volume, dan hasil uji":"Calculator, cycles, volume, and test results",
 "Cari kode atau nama saham":"Search stock code or name","Cari kode atau nama koin":"Search coin code or name","Kondisi IHSG":"IHSG condition","Kondisi S&P 500":"S&P 500 condition",
 "Tertekan":"Under pressure","tertekan":"under pressure","Naik":"Rising","Campuran":"Mixed","campuran":"mixed","Belum jelas":"Not clear yet",
@@ -737,6 +737,8 @@ body{transition:padding-right .55s cubic-bezier(.2,.8,.2,1)}
 /* ---------- Pengaturan: ukuran huruf & animasi ---------- */
 :root[data-fs=s]{zoom:.9}:root[data-fs=l]{zoom:1.12}
 :root[data-anim="0"] *,:root[data-anim="0"] *::before,:root[data-anim="0"] *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+.linkbtn{background:none;border:none;color:var(--accent);font:inherit;font-weight:600;cursor:pointer;padding:6px 0 0;text-align:left}
+.sgc{gap:6px}.sgc h4{flex-wrap:wrap;gap:6px}.sgc table td{padding-top:8px;padding-bottom:8px}
 /* ---------- Pengaturan: dialog ---------- */
 #cfSet{border:none;border-radius:20px;padding:0;width:min(520px,calc(100% - 24px));max-height:90vh;overflow:auto;background:var(--surface);color:var(--fg);box-shadow:0 30px 80px rgba(0,0,0,.35)}
 #cfSet::backdrop{background:rgba(10,15,30,.55)}
@@ -1976,9 +1978,9 @@ function renderSide(g,nd){
   const list=filtered(), br=document.querySelector(".topbar .brand");
   const num=c=>{ const m=/<b>([^<]*)<\/b>/.exec(c||""); return m&&/^[\d.,]+$/.test(m[1])?m[1]:""; };
   if(!$("snDyn")){ sn.innerHTML=`<div id="snDyn" style="display:flex;flex-direction:column;gap:10px"></div><div class="sn-foot" id="snFootSlot"></div><button type="button" class="sn-col" id="snCol" title="Kecilkan / lebarkan menu">${document.body.classList.contains("sncol")?"»":"«"}</button>`; }
-  $("snDyn").innerHTML=`<div class="sn-top">${br?br.innerHTML:""}</div><nav class="sn-nav">${GROUPS.map(x=>{ const subs=x.tabs.length>1&&x.id===g.id?TABS.filter(t=>x.tabs.includes(t.id)):[];
+  $("snDyn").innerHTML=`<div class="sn-top">${br?br.innerHTML:""}</div><nav class="sn-nav">${GROUPS.map(x=>{ const subs=x.tabs.length>1&&x.id===g.id?ordTabs(TABS.filter(t=>x.tabs.includes(t.id))):[];
       return `<button type="button" class="sn-g" data-g="${x.id}" aria-current="${x.id===g.id}" title="${esc(x.name)}"><span class="ic" aria-hidden="true">${x.ic}</span><span class="tx">${x.name}</span>${x.id==="porto"&&nd?`<span class="bd">${nd}</span>`:""}</button>
-      ${subs.map(t=>{ const n=num(tabCount(t,list)); return `<button type="button" class="sn-s" data-sub="${t.id}" aria-current="${t.id===tab}"><span class="tx">${esc(t.name)}</span>${n?`<span class="cn">${n}</span>`:""}</button>`; }).join("")}`; }).join("")}</nav>`;
+      ${subs.map(t=>{ const n=num(tabCount(t,list)); return `<button type="button" class="sn-s" data-sub="${t.id}" aria-current="${t.id===tab}"><span class="tx">${MID[t.id]||t.id==="pbt"?((methodProof(t.id)||{}).ic||"")+" ":""}${esc(t.name)}</span>${n?`<span class="cn">${n}</span>`:""}</button>`; }).join("")}`; }).join("")}</nav>`;
   const tb=document.querySelector(".tb-r"); if(tb&&tb.parentNode!==$("snFootSlot")) $("snFootSlot").appendChild(tb);
 }
 function placeTb(){ const tb=document.querySelector(".tb-r"), top=document.querySelector(".topbar"); if(!tb||!top) return;
@@ -2326,7 +2328,7 @@ window.addEventListener("online",()=>autoCheck(true));
   const hero=document.createElement("section"); hero.className="hero"; hero.id="hero";
   const top=document.querySelector(".wrap>.topbar"); if(top) top.after(hero);
   const SUBS={home:{id:"Ringkasan Bursa Efek Indonesia hari ini",us:"Ringkasan S&P 500 dan Nasdaq-100 hari ini",kripto:"Ringkasan 50 koin terbesar di Indodax"},
-    saham:"Sinyal tiap metode, lengkap dengan aturannya",watch:`${CR?"Koin":"Saham"} yang ditandai dan area belinya`,porto:"Catat pembelian, pantau stop dan target",alat:"Kalkulator, siklus, volume, dan hasil uji"};
+    saham:"Sinyal tiap metode, lengkap dengan aturannya",watch:CR?"Koin yang ditandai dan area belinya":"Posisi perlu tindakan, sinyal tiap metode, dan saham pantauan",porto:"Catat pembelian, pantau stop dan target",alat:CR?"Kalkulator, siklus, volume, dan hasil uji":"Grafik, siklus, kalkulator, volume, dan dividen"};
   const salam=()=>{ const h=+new Date().toLocaleString("en-US",{timeZone:"Asia/Jakarta",hour:"numeric",hour12:false})%24; return h<11?"Selamat pagi":h<15?"Selamat siang":h<18?"Selamat sore":"Selamat malam"; };
   const breadth=()=>{ try{ if(typeof breadthNow==="function"){ const b=breadthNow(); if(b!=null) return b; } }catch(e){}
     const p=rows.filter(o=>typeof o.sma200==="number"); return p.length?p.filter(o=>o.sma200>0).length/p.length*100:null; };

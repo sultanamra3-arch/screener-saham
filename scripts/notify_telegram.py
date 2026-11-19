@@ -344,9 +344,8 @@ def morning(d: dict) -> str | None:
     if not buys and not sells:
         L += ["", "Tidak ada sinyal beli atau jual baru hari ini."]
     try:
-        L += support_section(d)
+        # area support/Rencana beli tidak lagi dikirim: hasil ujinya tipis (tab Sinyal di website)
         L += extras_section(d)
-        L += track_section(d)
         _ny = date.today().year + 1
         if date.today().month == 12 and not any(h.startswith(str(_ny)) for h in HOLIDAYS):
             L += ["", f"⚠️ <b>Daftar libur bursa AS (NYSE) {_ny} belum diisi.</b> Jadwal update dan pengingat order bisa jalan di hari libur. Minta Claude memperbarui HOLIDAYS di scripts/notify_telegram.py."]
@@ -476,7 +475,8 @@ def _allow_methods(d: dict, c: dict) -> list[str]:
 
 
 def near_lines(d: dict, sent: set) -> tuple[list[str], list[str]]:
-    """Saham Area beli yang baru masuk area beli, atau tinggal ≤1% lagi dari harga antrean (sekali per hari)."""
+    """(Dimatikan) Dulu: saham yang masuk area beli di support. Sejak Nov 2026 tidak dikirim lagi karena hasil ujinya tipis."""
+    return [], []
     import plan_track
     f = ROOT / "data" / "cycles.json"
     if not f.exists():
