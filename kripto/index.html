@@ -2034,7 +2034,7 @@ function tzGuide(a,idxName,sel){
       pos={q,sh,cost,val,pl,buy,stop,k,w:tot?val/tot*100:0,tot,plAt:X=>sh*X*k-cost}; } }catch(e){}
   const unit=IS_ID&&typeof UNAME!=="undefined"&&!/kripto/.test(location.pathname)?UNAME:(/kripto/.test(location.pathname)?"koin":"lembar");
   const rp=v=>`${v>=0?"+":"−"}${usd(Math.abs(v))}`, pc=v=>pos&&pos.cost?` (${v>=0?"+":"−"}${nf(Math.abs(v/pos.cost*100),0)}%)`:"";
-  const qtyTxt=n=>unit==="koin"?nf(n,4)+" koin":nf(n,0)+" "+unit;
+  const qtyTxt=n=>unit==="koin"?nf(n,4)+" koin":nq(n)+" "+unit;
   let html=`<div class="tzg" style="border-top:1px solid var(--line);margin-top:10px;padding-top:10px;display:grid;gap:8px;font-size:14px">
     <div><b>🧭 Panduan tanggal terdekat: ${tgl(d0,1)}</b> <span class="st hold">${lagi}</span><br><span class="note">${f0} hari dari ${ty0==="H"?"puncak":"lembah"} ${usd(pv0)} (${tgl(pd0,1)})${near?`. Berdekatan dengan ${tgl(near[0],1)} (${near[1]} hari dari ${near[3]==="H"?"puncak":"lembah"} ${usd(near[4])})`:""}.</span></div>`;
   const TS=tzStat(), gd=a.tzdir;
