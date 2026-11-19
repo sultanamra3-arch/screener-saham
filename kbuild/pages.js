@@ -51,6 +51,9 @@ function saranStock(o){
     Ln.push(SAFE?`ℹ️ Aturan metode: dipegang selama masih 8 teratas, di atas rata-rata 50 hari (${usd(u.lv&&u.lv.exit)}), dan Lampu BTC hijau.`:`✔️ Kalau ikut, porsinya cukup 1/5 dari dana kripto Anda. Jual kalau ditutup di bawah ${usd(u.lv&&u.lv.exit)} (rata-rata 50 hari) atau saat cek Senin keluar dari 8 besar.`);
     if(pl&&pl.kind==="queue") Ln.push(`🎯 Lebih hemat kalau menunggu turun ke sekitar ${usd(pl.e)} (${tip("lantai harga","support")}).`);
     if(o.rsi14>=75) Ln.push(SAFE?`ℹ️ RSI ${nf(o.rsi14,0)}: sudah panas.`:`⚠️ RSI ${nf(o.rsi14,0)}: sudah panas, jangan beli sekaligus. Cicil.`);
+  } else if(pl&&pl.kind==="wait"){ c="n"; title=SAFE?"Di area support, rencana ditunda (lampu BTC merah).":pick(["Di area support, tapi tunggu lampu hijau dulu.","Harga di support, tapi pasar lagi lemah. Tahan dulu."],o.ticker);
+    Ln.push(SAFE?"ℹ️ Uji 2021–2026: beli di area support saat lampu BTC merah rata-rata merugi (±70% kena stop). Rencana aktif lagi saat lampu hijau.":"✖️ Uji 2021–2026: beli di support saat lampu merah rata-rata rugi, ±70% kena stop. Tunggu BTC ditutup di atas rata-rata 50 hari.");
+    Ln.push(`📌 Area support ${usd(pl.e)}, batas jebol ${usd(pl.stop)}.`);
   } else if(pl){ c=L.g50?"y":"n"; title=SAFE?"Harga di area support.":L.g50?pick(["Lagi di lantai harga. Boleh dilirik.","Harga sedang di area support."],o.ticker):pick(["Di area support, tapi lampu BTC merah.","Murah, tapi pasarnya lagi lemah."],o.ticker);
     Ln.push(pl.kind==="now"?`🎯 Area beli sekitar <b>${usd(pl.e)}</b>, batas rugi <b>${usd(pl.stop)}</b> (harga penutupan).`:`🎯 Area beli di <b>${usd(pl.e)}</b> (${pc(pl.e,p)} di bawah harga sekarang). Batal kalau tembus ${usd(pl.stop)}.`);
     if(pl.tgt) Ln.push(`📈 Target wajar sekitar <b>${usd(pl.tgt)}</b> (+${nf((pl.tgt/pl.e-1)*100,1)}%).`);

@@ -115,7 +115,7 @@ function tabCount(t,list){
   else if(t.id==="hot"){ const n=hotLists(list).spike.length; c=n?`<b>${n}</b> volume melonjak`:"Volume & momentum"; }
   else if(t.id==="calc") c="Jumlah koin, untung, rugi";
   else if(t.id==="porto"){ const P=porto(); if(!P.open.length) c="Catat & pantau"; else { const nd=P.open.filter(ps=>posEval(ps).acts.some(a=>a.lv<=1)).length; c=`<b>${P.open.length}</b> posisi${nd?` · ⚠ ${nd} perlu tindakan`:""}`; } }
-  else if(t.id==="watch"){ if(CYC&&CYC.watch){ const pl=planList(Object.fromEntries(list.map(o=>[o.ticker,o]))).list, n=pl.filter(x=>x.pl.kind==="now").length; c=SAFE?`<b>${n}</b> di area beli · ${pl.length-n} menunggu`:`<b>${n}</b> beli sekarang · ${pl.length-n} antrean`; } else c="★ dan area support"; }
+  else if(t.id==="watch"){ if(CYC&&CYC.watch){ const pl=planList(Object.fromEntries(list.map(o=>[o.ticker,o]))).list, n=pl.filter(x=>x.pl.kind==="now").length, w=pl.filter(x=>x.pl.kind==="wait").length; c=w?`⏸ ditunda · ${w} di support`:SAFE?`<b>${n}</b> di area beli · ${pl.length-n} menunggu`:`<b>${n}</b> beli sekarang · ${pl.length-n} antrean`; } else c="★ dan area support"; }
   else if(t.id==="cycles"){ const f=CYC&&Object.values(CYC.indices)[0]; c=f?`<b>${(f.rawan||[]).length}</b> tanggal rawan`:"Grafik"; }
   return c;
 }

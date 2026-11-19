@@ -6,9 +6,27 @@ function planList(byT){
   const W=CYC.watch;
   const mk=(src,near)=>Object.entries(src||{}).filter(([t,w])=>byT[t]&&w.strength!=="lemah").map(([t,w])=>{ const x={t,w,o:byT[t],near}; x.rm=roomOf(t,w); return x; });
   const all=[...mk(W.in,false),...mk(W.near,true)]; let skip=0; const out=[];
-  all.forEach(x=>{ x.pl=planOf(x); if(x.pl) out.push(x); else skip++; });
+  // Lampu BTC merah: rencana ditahan (uji 2021–2026: rata-rata −1,5% per transaksi, ±70% kena stop)
+  const pause=lamp().g50===false;
+  all.forEach(x=>{ x.pl=planOf(x); if(x.pl&&pause) x.pl={...x.pl,was:x.pl.kind,kind:"wait"}; if(x.pl) out.push(x); else skip++; });
   out.sort((a,b)=>(a.pl.kind==="now"?0:1)-(b.pl.kind==="now"?0:1)||(a.pl.kind==="now"?(b.pl.rr??9)-(a.pl.rr??9):b.pl.dist-a.pl.dist));
   return {list:out,skip};
+}
+// hasil uji mundur Rencana beli (data/longtest.json "plan") + rekam jejak ke depan (data/plan_track.json)
+let PTK=null, PTK_P=null;
+function loadPtk(){ if(!PTK_P) PTK_P=fetch("data/plan_track.json",{cache:"no-cache"}).then(r=>r.ok?r.json():null).catch(()=>null).then(j=>{ PTK=j||{}; if(tab==="watch") renderResults(); }); return PTK_P; }
+function planTestCard(){
+  const U=LT&&LT.plan; if(!PTK) loadPtk();
+  const pc=v=>`<b class="${v>0?"ok":"no"}">${v>0?"+":""}${nf(v,1)}%</b>`;
+  const tr=(lbl,x)=>x?`<tr><td>${lbl}</td><td class="num">${nf(x.n,0)}</td><td class="num">${pc(x.avg)}</td><td class="num">${x.win}%</td><td class="num">${pc(x.rand)}</td><td class="num">${x.yp}/${x.y}</td></tr>`:"";
+  const D=(PTK&&PTK.done||[]).filter(r=>r.res!=="nofill"&&r.ret!=null), op=(PTK&&PTK.open||[]).filter(r=>r.in);
+  const live=PTK&&PTK.start?`<p class="note" style="margin:8px 0 0">📒 Rekam jejak ke depan sejak ${tgl(PTK.start,1)} (hanya saat lampu hijau): ${D.length?`${D.length} selesai, rata-rata ${pc(D.reduce((s,r)=>s+r.ret,0)/D.length)}, untung ${D.filter(r=>r.ret>0).length}/${D.length}`:"belum ada yang selesai"}${op.length?` · ${op.length} berjalan`:""}.</p>`:"";
+  if(!U) return live?`<div class="mcard" style="margin-top:10px">${live}</div>`:"";
+  return `<div class="mcard" style="margin-top:10px;border-left:4px solid var(--warn);gap:6px"><h4><span>📏 Hasil uji Rencana beli kripto</span><span class="note">${tgl(U.from,1)}–${tgl(U.to,1)} · ${U.coins} koin</span></h4>
+    <div class="tablebox"><table class="nocard" style="min-width:0"><thead><tr><th>Kondisi</th><th class="num">Transaksi</th><th class="num">Rata-rata</th><th class="num">Untung</th><th class="num">Masuk acak*</th><th class="num">Tahun +</th></tr></thead><tbody>
+      ${tr("🟢 Lampu hijau",U.green)}${tr("🔴 Lampu merah",U.red)}${tr("🟢 Hijau, “beli sekarang” saja",U.now_green)}</tbody></table></div>
+    <p style="font-size:14px;margin:6px 0 0">${T("Saat lampu merah rata-rata rugi, jadi rencana ditunda. Saat lampu hijau hasilnya positif tapi <b>tidak lebih baik dari masuk di hari acak</b>: zona support sendiri belum terbukti memberi keunggulan di kripto. Metode utama tetap Momentum 90 hari.","Saat lampu merah rata-rata merugi, sehingga aturan menunda rencana. Saat lampu hijau hasilnya positif namun tidak lebih baik dari masuk di hari acak; zona support belum terbukti memberi keunggulan di kripto.")}</p>
+    <p class="note" style="margin:4px 0 0">*Masuk acak: koin & hari acak dengan status lampu sama, stop & target berjarak sama. Biaya ${nf(U.fee,1)}% beli dan jual, paling lama ${U.hold} hari. Memakai koin yang ada sekarang (koin yang sudah hilang tidak ikut), jadi hasil nyata cenderung lebih buruk. Hasil masa lalu tidak menjamin masa depan; kripto berisiko sangat tinggi.</p>${live}</div>`;
 }
 function renderWatch(box){
   if(!CYC&&!CYC_ERR){ box.innerHTML=`<div class="tablebox"><div class="empty">Memuat data area support…</div></div>`; loadCycles().then(()=>{ if(tab==="watch"){ renderTabs(); renderResults(); } }); return; }
@@ -16,13 +34,13 @@ function renderWatch(box){
   const W=CYC.watch, L=lamp();
   const byT=Object.fromEntries(filtered().map(o=>[o.ticker,o]));
   const newSet=new Set(W.new||[]), lowSet=new Set(W.lower||[]);
-  const {list,skip}=planList(byT), nNow=list.filter(x=>x.pl.kind==="now").length, nQ=list.length-nNow;
+  const {list,skip}=planList(byT), nNow=list.filter(x=>x.pl.kind==="now").length, nW=list.filter(x=>x.pl.kind==="wait").length, nQ=list.length-nNow-nW;
   const own=new Set(porto().open.map(p=>p.code));
   const rrS=pl=>pl.rr==null?'<span class="ok">terbuka</span>':`<span class="${pl.rr>=3?"ok":""}">1 : ${nf(pl.rr,1)}</span>`;
-  const row=x=>{ const pl=x.pl, now=pl.kind==="now", u=uv(x.o,"mom90");
+  const row=x=>{ const pl=x.pl, wt=pl.kind==="wait", now=(wt?pl.was:pl.kind)==="now", u=uv(x.o,"mom90");
     return `<tr class="row wrow" data-go="${esc(x.t)}" tabindex="0">${stockCell(x.o)}
       <td class="num">${usd(x.o.price)}</td>
-      <td>${now?`<span class="st buy">${T("✅ Beli sekarang","✅ Di area beli")}</span>`:`<span class="st hold">${T("⏳ Pasang antrean","⏳ Menunggu area beli")}</span>`}${own.has(x.t)?' <span class="note">💼 sudah punya</span>':""}${newSet.has(x.t)||lowSet.has(x.t)?' <span class="st buy">baru</span>':""}
+      <td>${wt?`<span class="st wait">${T("⏸ Tunggu lampu hijau","⏸ Ditunda: lampu BTC merah")}</span>`:now?`<span class="st buy">${T("✅ Beli sekarang","✅ Di area beli")}</span>`:`<span class="st hold">${T("⏳ Pasang antrean","⏳ Menunggu area beli")}</span>`}${own.has(x.t)?' <span class="note">💼 sudah punya</span>':""}${newSet.has(x.t)||lowSet.has(x.t)?' <span class="st buy">baru</span>':""}
         <br><span class="note">${now?`di zona S${pl.n} ${zr(pl.z)} (${pl.z.strength})`:`menunggu turun ${nf(-pl.dist,1)}% ke S${pl.n} (${pl.z.strength})`}</span></td>
       <td class="num"><b>${now?"≤ ":""}${usd(pl.e)}</b></td>
       <td class="num no" style="white-space:nowrap">&lt;&nbsp;${usd(pl.stop)}<br><span class="note">${nf(pl.loss,1)}%</span></td>
@@ -37,7 +55,8 @@ function renderWatch(box){
       <li>⚖️ Syaratnya: masih bisa naik minimal ${UP_MIN}% dan calon untungnya minimal ${RR_MIN}× calon rugi.</li>
       ${L.g50===false?`<li>🔴 <b>Lampu BTC merah:</b> ${T("support kripto lebih sering jebol saat begini. Kalau tetap beli, kecilkan jumlahnya.","support lebih sering jebol di kondisi ini.")}</li>`:""}
       <li>🛑 ${T("Kalau harga ditutup di bawah angka <b>Stop</b>, jual atau batalkan antrean.","<b>Stop</b> = batas rugi menurut aturan (harga penutupan).")}</li></ul>`)+`
-    <div class="rhead" style="margin-top:12px"><div class="l"><h2>${T(`Rencana beli: ${nNow} beli sekarang · ${nQ} antrean`,`Area beli: ${nNow} di area · ${nQ} menunggu`)}</h2>
+    <div class="rhead" style="margin-top:12px"><div class="l"><h2>${nW?T(`Rencana beli: ditunda · ${nW} koin di area support`,`Area beli: ditunda · ${nW} koin di area support`):T(`Rencana beli: ${nNow} beli sekarang · ${nQ} antrean`,`Area beli: ${nNow} di area · ${nQ} menunggu`)}</h2>
+      ${nW?`<p style="margin:4px 0 6px">⏸️ <b>Lampu BTC merah:</b> ${T("jangan beli dulu walaupun harga di support. Rencana di bawah aktif lagi saat BTC ditutup di atas rata-rata 50 hari.","aturan menunda semua rencana beli sampai BTC ditutup di atas rata-rata 50 hari.")} Lihat hasil uji di bawah tabel.</p>`:""}
       <p class="note">${skip?`${skip} koin lain di area support dilewati karena ruang naiknya sempit. `:""}Klik baris untuk membuka grafik.</p></div></div>
     <div class="tablebox"><table><thead><tr><th>Koin</th><th class="num">Harga</th><th>${T("Aksi","Status")}</th><th class="num">${T("Beli di","Area beli")}</th><th class="num">Stop</th><th class="num">Target</th><th class="num">R:R</th><th>Tren</th><th></th></tr></thead><tbody>
     ${list.length?list.slice(0,60).map(row).join(""):`<tr><td colspan="9" class="empty">Belum ada koin di area support yang hitungannya layak. Menunggu juga keputusan yang bagus.</td></tr>`}</tbody></table></div>
@@ -46,12 +65,13 @@ function renderWatch(box){
       <div><span><b>Stop</b>: bila harga candle harian <b>ditutup</b> di bawah angka ini, support dianggap jebol; jual atau batalkan antrean.</span></div>
       <div><span><b>Target</b>: resistance kuat/sedang terdekat. <b>R:R</b> = potensi untung dibagi potensi rugi.</span></div>
       <div><span>🧮 membuka Kalkulator dengan harga beli, stop, dan target terisi, untuk menghitung berapa Rupiah yang aman dibelikan.</span></div></div></details>
+    ${planTestCard()}
     <div class="rhead" style="margin-top:16px"><div class="l"><h2>★ Koin yang Anda tandai</h2><p class="note">Klik ☆ di tabel mana pun untuk menandai.</p></div></div>
     <div class="tablebox"><table><thead><tr><th>Koin</th><th class="num">Harga</th><th class="num">Support terdekat</th><th class="num">Jarak</th><th class="num">R1</th><th>Status</th></tr></thead><tbody>
     ${starred.length?starred.map(x=>{ const z=x.z&&x.z.s, w=W.in[x.t], r1=x.z?strongRes(x.z.a):null, pl=list.find(y=>y.t===x.t); return `<tr class="row wrow" data-go="${esc(x.t)}" tabindex="0">${stockCell(x.o)}<td class="num">${usd(x.o.price)}</td>
       <td class="num">${z?zr(z)+" ("+z.strength+")":"–"}</td><td class="num">${w?(w.dist<=0?"di zona":"+"+nf(w.dist,1)+"%"):z?"+"+nf((x.o.price/z.hi-1)*100,1)+"%":"–"}</td>
       <td class="num">${r1?usd(r1.lo)+" ("+pct(r1.dist)+")":"–"}</td>
-      <td style="font-size:13px">${pl?(pl.pl.kind==="now"?`<span class="st buy">${T("✅ beli sekarang","✅ di area beli")}</span> `:`<span class="st hold">${T("⏳ antre","⏳ area beli")} ${usd(pl.pl.e)}</span> `):""}${uchip(uv(x.o,"mom90"))}</td></tr>`}).join("")
+      <td style="font-size:13px">${pl?(pl.pl.kind==="wait"?`<span class="st wait">${T("⏸ tunggu lampu hijau","⏸ ditunda")}</span> `:pl.pl.kind==="now"?`<span class="st buy">${T("✅ beli sekarang","✅ di area beli")}</span> `:`<span class="st hold">${T("⏳ antre","⏳ area beli")} ${usd(pl.pl.e)}</span> `):""}${uchip(uv(x.o,"mom90"))}</td></tr>`}).join("")
       :`<tr><td colspan="6" class="empty">Belum ada koin yang Anda tandai.</td></tr>`}</tbody></table></div>
     ${broken.length?`<div class="rhead" style="margin-top:16px"><div class="l"><h2>⚠️ Support jebol</h2><p class="note">Kemarin di area support, sekarang di bawah batas jebol. Batalkan antrean dan evaluasi ulang.</p></div></div>
       <div class="tablebox"><table><thead><tr><th>Koin</th><th class="num">Harga</th><th class="num">Zona yang jebol</th><th class="num">Di bawah zona</th></tr></thead><tbody>

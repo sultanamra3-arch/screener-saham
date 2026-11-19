@@ -491,6 +491,18 @@ def main():
     for f in OHLC_DIR.glob("*.json"):
         if f.stem not in keep:
             f.unlink()
+    try:  # rekam jejak "Rencana beli": sekali per candle harian yang sudah selesai; saat lampu BTC merah tidak ada catatan baru
+        import plan_track
+        pt, last_done = OUT / "plan_track.json", done.index[-1].strftime("%Y-%m-%d")
+        st0 = json.loads(pt.read_text()) if pt.exists() else {}
+        if st0.get("at") != last_done and CYC_FILE.exists():
+            cyc = json.loads(CYC_FILE.read_text())
+            pl = plan_track.plans({"stocks": rows}, cyc, ["mom90"], lambda o, m: True, idr=False, liquid_only=False,
+                                  up_min=5.0, trend=False, floor=lambda v, idr: v) if lamp.get("g50") else []
+            s_ = plan_track.update(pt, OHLC_DIR, last_done, pl, (FEE, FEE), upto=last_done)
+            log(f"Rekam jejak rencana beli: {len(pl)} baru, {len(s_['open'])} berjalan, {len(s_['done'])} selesai")
+    except Exception as e:
+        log(f"Rekam jejak rencana beli gagal: {e}")
     try:  # garis tren: statistik & rekam jejak, sekali setiap candle harian baru (candle hari ini belum selesai)
         import trend
         ts = OUT / "trend_stats.json"
