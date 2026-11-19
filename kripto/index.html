@@ -737,6 +737,11 @@ body{transition:padding-right .55s cubic-bezier(.2,.8,.2,1)}
 /* ---------- Pengaturan: ukuran huruf & animasi ---------- */
 :root[data-fs=s]{zoom:.9}:root[data-fs=l]{zoom:1.12}
 :root[data-anim="0"] *,:root[data-anim="0"] *::before,:root[data-anim="0"] *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+.sgi{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line);cursor:pointer}
+.sgi:first-child{border-top:none}.sgi>div{min-width:0}.sgi .tk{font-weight:800}.sgi .sub{display:block;color:var(--muted);font-size:12.5px;line-height:1.4;overflow-wrap:anywhere}
+.sgi .pf{display:block;font-size:11.5px;font-weight:700;color:var(--good)}.sgi .pf.no{color:var(--bad)}.sgi .pf.mu{color:var(--muted)}.sgi>.st,.sgi>.rt{flex:none;white-space:nowrap}
+.sgh{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:12px 0 2px;font-size:14px}.sgh:first-child{margin-top:0}
+.mband{border-left:5px solid var(--warn);gap:2px;font-size:14px}.mband.g{border-left-color:var(--good)}.mband.r{border-left-color:var(--bad)}
 .linkbtn{background:none;border:none;color:var(--accent);font:inherit;font-weight:600;cursor:pointer;padding:6px 0 0;text-align:left}
 .sgc{gap:6px}.sgc h4{flex-wrap:wrap;gap:6px}.sgc table td{padding-top:8px;padding-bottom:8px}
 /* ---------- Pengaturan: dialog ---------- */
