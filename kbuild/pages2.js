@@ -240,5 +240,5 @@ function renderCalc(box){
 }
 
 // ---------- navigasi ----------
-const GROUPS=[{id:"home",ic:"🏠",name:"Beranda",tabs:["summary"]},{id:"metode",ic:"🚦",name:"Metode",tabs:["lamp","mom90"]},
-  {id:"watch",ic:"📍",name:"Watchlist",tabs:["watch"]},{id:"porto",ic:"💼",name:"Portofolio",tabs:["porto"]},{id:"alat",ic:"🧰",name:"Alat",tabs:["cycles","hot","calc"]}];
+const CF_ICO=(function(){ var l=document.querySelector("img.logo"), s=l?l.getAttribute("src"):"icons/icon-192.png"; return s.replace(/icon-192\.png.*$/,"")+"ui/"; })(); const UI=(n,c)=>`<img class="${c||"uic"}" src="${CF_ICO}${n}.webp" alt="" decoding="async">`; const MICO={momentum:"momentum",canslim:"canslim",dividend:"dividend",pbt:"pbt",swing:"swing",value:"value",growth:"growth",quality:"quality",screen:"screen",uji:"uji"}; const GROUPS=[{id:"home",ic:UI("nav-home"),name:"Beranda",tabs:["summary"]},{id:"metode",ic:UI("nav-saham"),name:"Metode",tabs:["lamp","mom90"]},
+  {id:"watch",ic:UI("nav-sinyal"),name:"Watchlist",tabs:["watch"]},{id:"porto",ic:UI("nav-porto"),name:"Portofolio",tabs:["porto"]},{id:"alat",ic:UI("nav-alat"),name:"Alat",tabs:["cycles","hot","calc"]}];
