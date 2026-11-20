@@ -129,6 +129,9 @@ fetch("data/stocks.json",{cache:"no-cache"}).then(r=>{ if(!r.ok) throw new Error
 </html>
 """
 core = K("core.js").replace("let openTicker=null;", "let openTicker=null;\nlet RSI14=null;")
+# tombol "Pasang aplikasi" pindah ke Pengaturan (skrip yang sama dengan index.html)
+inst = between('<script>\n/* Tombol "Pasang aplikasi" dipindah', '</body>')
+boot = R(boot, "</script>\n</body>", "</script>\n" + inst + "</body>")
 out = head + css_add + body + core + "\n" + cyc + "\n// ---------- Saran: helper ----------\n" + saranh + "\n" + K("pages.js") + "\n// ---------- Watchlist: tanda bintang ----------\n" + star + "\n" + lad + "\n" + plan + "\n" + K("pages2.js") + "\n" + nav + "\n" + expl + "\n" + K("pages3.js") + "\n" + qs + "\n" + tail + boot
 import os
 os.makedirs(ROOT / "kripto", exist_ok=True)
