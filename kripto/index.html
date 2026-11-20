@@ -964,7 +964,7 @@ function renderTabs(){
   renderNav(); const grp=groupOf(tab); store.set(WP+"g."+grp.id,tab);
   $("tabs").innerHTML=grp.tabs.length<2?"":TABS.filter(t=>grp.tabs.includes(t.id)).map(t=>{
     const c=tabCount(t,list);
-    return `<button class="tab" role="tab" type="button" aria-selected="${t.id===tab}" data-id="${t.id}"><span class="k">${esc(t.k)}</span><span class="n">${esc(t.name)}</span><span class="c">${c}</span></button>`;
+    return `<button class="tab" role="tab" type="button" aria-selected="${t.id===tab}" data-id="${t.id}"><span class="k">${esc(t.k)}</span><span class="n">${typeof MICO!=="undefined"&&MICO[t.id]?UI(MICO[t.id],"mic"):""}${esc(t.name)}</span><span class="c">${c}</span></button>`;
   }).join("");
 }
 function statBlock(){
@@ -1998,8 +1998,8 @@ function renderCalc(box){
 }
 
 // ---------- navigasi ----------
-const CF_ICO=(function(){ var l=document.querySelector("img.logo"), s=l?l.getAttribute("src"):"icons/icon-192.png"; return s.replace(/icon-192\.png.*$/,"")+"ui/"; })(); const UI=(n,c)=>`<img class="${c||"uic"}" src="${CF_ICO}${n}.webp" alt="" decoding="async">`; const MICO={momentum:"momentum",canslim:"canslim",dividend:"dividend",pbt:"pbt",swing:"swing",value:"value",growth:"growth",quality:"quality",screen:"screen",uji:"uji"}; const GROUPS=[{id:"home",ic:UI("nav-home"),name:"Beranda",tabs:["summary"]},{id:"metode",ic:UI("nav-saham"),name:"Metode",tabs:["lamp","mom90"]},
-  {id:"watch",ic:UI("nav-sinyal"),name:"Watchlist",tabs:["watch"]},{id:"porto",ic:UI("nav-porto"),name:"Portofolio",tabs:["porto"]},{id:"alat",ic:UI("nav-alat"),name:"Alat",tabs:["cycles","hot","calc"]}];
+const CF_ICO=(function(){ var l=document.querySelector("img.logo"), s=l?l.getAttribute("src"):"icons/icon-192.png"; return s.replace(/icon-192\.png.*$/,"")+"ui/"; })(); const UI=(n,c)=>`<img class="${c||"uic"}" src="${CF_ICO}${n}.webp" alt="" decoding="async">`; const MICO={momentum:"momentum",canslim:"canslim",dividend:"dividend",pbt:"pbt",swing:"swing",value:"value",growth:"growth",quality:"quality",screen:"screen",uji:"uji",cycles:"cycles",calc:"calc",hot:"hot",fibtime:"fibtime",divcal:"dividend",lamp:"lamp",mom90:"momentum"}; const GROUPS=[{id:"home",ic:UI("nav-home2"),name:"Beranda",tabs:["summary"]},{id:"metode",ic:UI("nav-metode"),name:"Metode",tabs:["lamp","mom90"]},
+  {id:"watch",ic:UI("nav-watchlist"),name:"Watchlist",tabs:["watch"]},{id:"porto",ic:UI("nav-porto2"),name:"Portofolio",tabs:["porto"]},{id:"alat",ic:UI("nav-alat"),name:"Alat",tabs:["cycles","hot","calc"]}];
 
 const groupOf=t=>GROUPS.find(g=>g.tabs.includes(t))||GROUPS[0];
 function renderSide(g,nd){

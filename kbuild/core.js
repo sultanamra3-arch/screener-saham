@@ -125,7 +125,7 @@ function renderTabs(){
   renderNav(); const grp=groupOf(tab); store.set(WP+"g."+grp.id,tab);
   $("tabs").innerHTML=grp.tabs.length<2?"":TABS.filter(t=>grp.tabs.includes(t.id)).map(t=>{
     const c=tabCount(t,list);
-    return `<button class="tab" role="tab" type="button" aria-selected="${t.id===tab}" data-id="${t.id}"><span class="k">${esc(t.k)}</span><span class="n">${esc(t.name)}</span><span class="c">${c}</span></button>`;
+    return `<button class="tab" role="tab" type="button" aria-selected="${t.id===tab}" data-id="${t.id}"><span class="k">${esc(t.k)}</span><span class="n">${typeof MICO!=="undefined"&&MICO[t.id]?UI(MICO[t.id],"mic"):""}${esc(t.name)}</span><span class="c">${c}</span></button>`;
   }).join("");
 }
 function statBlock(){
