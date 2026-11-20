@@ -35,7 +35,7 @@ body = """</style>
 <aside class="sidenav" id="sidenav" aria-label="Menu samping"></aside>
 <div class="wrap">
   <header class="topbar">
-    <div class="brand"><img class="logo" src="../icons/icon-192.png" alt="" width="34" height="34"><div><b>Screener Kripto</b><span class="sub">50 koin terbesar di Indodax</span></div></div>
+    <div class="brand"><img class="logo" src="../icons/icon-192.png" alt="" width="34" height="34"><div><b>ChartFlow</b><span class="sub">Pemandu Analitis Pasar</span></div></div>
     <div class="tb-r"><nav class="mkt" aria-label="Pasar"><a href="https://sultanamra3-arch.github.io/screener-saham/">🇺🇸<span class="mt"> US</span></a><a href="https://sultanamra3-arch.github.io/screener-saham-indonesia/">🇮🇩<span class="mt"> ID</span></a><a href="https://sultanamra3-arch.github.io/screener-saham/kripto/" aria-current="page">₿<span class="mt"> Kripto</span></a></nav>
       <button type="button" id="install" hidden>📲 Pasang<span class="lg"> aplikasi</span></button>
       <button type="button" class="iconbtn" id="theme" aria-label="Ganti tema terang/gelap">🌙</button></div>
