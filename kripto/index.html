@@ -818,6 +818,8 @@ body{transition:padding-right .55s cubic-bezier(.2,.8,.2,1)}
 #cfSet .sw-neon{background:#05030f}#cfSet .sw-neon i:nth-child(1){background:#5cf2ff;box-shadow:0 0 8px #5cf2ff}#cfSet .sw-neon i:nth-child(2){background:#ff2ec4;box-shadow:0 0 8px #ff2ec4}#cfSet .sw-neon i:nth-child(3){background:#b98cff;box-shadow:0 0 8px #b98cff}
 #cfSet .ft{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:14px}
 #cfSet .rs{min-height:44px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--fg);font:inherit;font-size:13px;font-weight:600;padding:8px 14px;cursor:pointer}
+/* kepala halaman di HP: nama ChartFlow yang mengalah (terpotong …), tombol akun/cari/⚙️ tetap satu baris (22 Nov 2026) */
+@media (max-width:600px){.topbar .brand{flex:1 1 0!important;min-width:0!important}.topbar .brand>div{min-width:0;overflow:hidden}.topbar .brand b,.topbar .brand .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
 
 .lampgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-top:10px}
 .lampx{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:var(--sunk)}
@@ -2769,6 +2771,59 @@ fetch("data/stocks.json",{cache:"no-cache"}).then(r=>{ if(!r.ok) throw new Error
   }
   var res=document.getElementById("results"); if(res&&!res.firstElementChild) res.innerHTML='<div class="tablebox"><div class="empty">Memuat data…</div></div>';
   if(res){ new MutationObserver(function(){ deco(res); }).observe(res,{childList:true,subtree:true}); deco(res); }
+})();
+</script>
+<script>
+/* Jam WIB + status bursa di kepala aplikasi, hanya di APK ChartFlow (22 Nov 2026). Halaman US: NYSE/Nasdaq; halaman Kripto: 24 jam.
+   Jam inti NYSE 09.30–16.00 ET (pra-pasar 04.00, pasca-pasar sampai 20.00 ET), dihitung ke WIB lewat zona America/New_York (ikut musim panas).
+   LIBUR/SETENGAH = kalender resmi NYSE 2026–2027 (nyse.com/markets/hours-calendars) — perbarui tiap akhir tahun. */
+(function(){
+  if(!/ChartFlowApp/.test(navigator.userAgent)&&!/[?&]jam=1\b/.test(location.search)) return;
+  var bar=document.querySelector("header.topbar"); if(!bar||document.getElementById("bursaJam")) return;
+  var KR=/\/kripto\//.test(location.pathname);
+  var LIBUR=("2026-01-01 2026-01-19 2026-02-16 2026-04-03 2026-05-25 2026-06-19 2026-07-03 2026-09-07 2026-11-26 2026-12-25 "+
+    "2027-01-01 2027-01-18 2027-02-15 2027-03-26 2027-05-31 2027-06-18 2027-07-05 2027-09-06 2027-11-25 2027-12-24").split(" ");
+  var SETENGAH=["2026-11-27","2026-12-24","2027-11-26"]; // tutup 13.00 ET
+  var HARI=["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+  var st=document.createElement("style");
+  st.textContent=".topbar{flex-wrap:wrap}#bursaJam{flex:1 0 100%;order:9;display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);"+
+    "margin-top:-2px;cursor:pointer;-webkit-tap-highlight-color:transparent}#bursaJam b{color:var(--fg);font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap;flex:none}"+
+    "#bursaJam .d{width:8px;height:8px;border-radius:50%;flex:none;background:var(--muted)}#bursaJam .d.on{background:var(--good);box-shadow:0 0 0 3px var(--good-soft)}"+
+    "#bursaJam .d.wait{background:var(--warn)}#bursaJam .t{flex:1 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}"+
+    "#bursaJamInfo{flex:1 0 100%;order:10;font-size:12.5px;color:var(--muted);background:var(--sunk);border-radius:12px;padding:10px 12px;line-height:1.6}"+
+    "#bursaJamInfo b{color:var(--fg)}";
+  document.head.appendChild(st);
+  var el=document.createElement("div"); el.id="bursaJam"; el.setAttribute("role","status"); el.title="Ketuk untuk melihat jadwal";
+  bar.appendChild(el);
+  function p2(n){ return String(n).padStart(2,"0"); }
+  function wib(t){ var d=new Date(t+7*3600e3); return {key:d.getUTCFullYear()+"-"+p2(d.getUTCMonth()+1)+"-"+p2(d.getUTCDate()),wd:d.getUTCDay(),hm:p2(d.getUTCHours())+"."+p2(d.getUTCMinutes())}; }
+  function et(t){ var o={}; new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23",weekday:"short"})
+      .formatToParts(new Date(t)).forEach(function(x){ o[x.type]=x.value; });
+    return {key:o.year+"-"+o.month+"-"+o.day,wd:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].indexOf(o.weekday),m:(+o.hour%24)*60+(+o.minute)}; }
+  function buka(e){ return e.wd>0&&e.wd<6&&LIBUR.indexOf(e.key)<0; }
+  function tutup(e){ return SETENGAH.indexOf(e.key)>=0?780:960; }
+  // waktu (ms) untuk menit ET `m`, `hari` hari dari sekarang; dikoreksi sekali bila musim panas berganti
+  function pada(now,hari,m){ var e=et(now), t=now+(hari*1440+m-e.m)*6e4-((now%6e4)); var e2=et(t); return t+(m-e2.m)*6e4*(Math.abs(m-e2.m)<=60?1:0); }
+  function label(now,t){ var a=wib(now), b=wib(t), besok=wib(now+864e5);
+    return (b.key===a.key?"":b.key===besok.key?"besok ":HARI[b.wd]+" ")+b.hm+" WIB"; }
+  function berikut(now){ for(var i=1;i<12;i++){ var t=pada(now,i,570); if(buka(et(t))) return t; } return null; }
+  function status(now){ var e=et(now), m=e.m, C=tutup(e), nx;
+    if(!buka(e)){ nx=berikut(now); return ["",(e.wd===0||e.wd===6?"Akhir pekan":"Hari libur bursa AS")+(nx?" · buka "+label(now,nx):"")]; }
+    if(m<240) return ["","Tutup · pra-pasar mulai "+label(now,pada(now,0,240))];
+    if(m<570) return ["wait","Pra-pasar (pre-market) · buka "+label(now,pada(now,0,570))];
+    if(m<C) return ["on","Bursa buka · tutup "+label(now,pada(now,0,C))+(C<960?" (tutup lebih awal)":"")];
+    if(m<1200) return ["wait","Pasca-pasar (after-hours) · sampai "+label(now,pada(now,0,1200))];
+    nx=berikut(now); return ["","Bursa tutup"+(nx?" · buka "+label(now,nx):"")]; }
+  function tick(){ var now=Date.now(), w=wib(now), s=KR?["on","Kripto · pasar buka 24 jam, 7 hari"]:status(now), x=KR?s[1]:"Bursa AS · "+s[1];
+    el.innerHTML='<span class="d '+s[0]+'"></span><b>'+w.hm+' WIB</b><span class="t">'+x+'</span>'; }
+  el.addEventListener("click",function(){ var o=document.getElementById("bursaJamInfo"); if(o){ o.remove(); return; }
+    o=document.createElement("div"); o.id="bursaJamInfo";
+    o.innerHTML=KR?"<b>Pasar kripto</b><br>Diperdagangkan 24 jam setiap hari, termasuk akhir pekan dan hari libur. Harga di ChartFlow diperbarui tiap jam. Kripto sangat fluktuatif. Ketuk jam lagi untuk menutup.":
+      "<b>Jam bursa AS (NYSE/Nasdaq), dalam WIB</b><br>Musim dingin (Nov–Mar): buka 21.30–04.00 WIB<br>Musim panas (Mar–Nov): buka 20.30–03.00 WIB<br>"+
+      "Pra-pasar mulai 16.00 / 15.00 WIB · pasca-pasar sampai 08.00 / 07.00 WIB<br>Libur: Sabtu, Minggu (waktu New York) dan hari libur bursa AS. Ketuk jam lagi untuk menutup.";
+    bar.appendChild(o); });
+  tick(); setInterval(tick,15000);
+  document.addEventListener("visibilitychange",function(){ if(!document.hidden) tick(); });
 })();
 </script>
 </body>
