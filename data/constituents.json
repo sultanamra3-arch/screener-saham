@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-10-23T07:26:27+00:00",
+ "updatedAt": "2026-11-23T22:45:28+00:00",
  "stocks": [
   {
    "ticker": "A",
@@ -2286,14 +2286,6 @@
    ]
   },
   {
-   "ticker": "KVUE",
-   "company": "Kenvue",
-   "sector": "Consumer Staples",
-   "idx": [
-    "SP500"
-   ]
-  },
-  {
    "ticker": "L",
    "company": "Loews Corporation",
    "sector": "Financials",
@@ -2919,6 +2911,14 @@
    ]
   },
   {
+   "ticker": "OKTA",
+   "company": "Okta, Inc.",
+   "sector": "Information Technology",
+   "idx": [
+    "SP500"
+   ]
+  },
+  {
    "ticker": "OMC",
    "company": "Omnicom Group",
    "sector": "Communication Services",
@@ -3412,7 +3412,7 @@
   },
   {
    "ticker": "SKYD",
-   "company": "Skydance Corporation",
+   "company": "Skydance",
    "sector": "Communication Services",
    "idx": [
     "SP500"
