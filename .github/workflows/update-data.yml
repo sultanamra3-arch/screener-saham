@@ -5,6 +5,10 @@ on:
     # 22:43 UTC Senin–Jumat = 05:43 WIB Selasa–Sabtu (setelah bursa AS tutup).
     # Menit tidak bulat supaya tidak ikut antrean padat GitHub di jam bulat.
     - cron: "43 22 * * 1-5"
+    # Cadangan: GitHub sering menunda/melewatkan jadwal. Tiap cadangan murah (~20 detik) karena
+    # scripts/daily_gate.py melewatkan update bila penutupan terakhir sudah masuk ke data.
+    - cron: "13 0,2,4,6 * * 2-6"
+    - cron: "13 9,12 * * 1-6"
     # Update harga tiap jam saat bursa AS buka (13:17–21:17 UTC; scripts/intraday_gate.py menyaring jam New York).
     - cron: "17 13-21 * * 1-5"
   workflow_dispatch:
@@ -49,6 +53,10 @@ jobs:
       - name: Cek jam bursa AS (update tiap jam)
         if: env.INTRADAY == '1'
         run: python scripts/intraday_gate.py | tee -a "$GITHUB_ENV"
+
+      - name: Cek apakah penutupan terakhir sudah masuk (jadwal cadangan)
+        if: env.INTRADAY != '1'
+        run: python scripts/daily_gate.py | tee -a "$GITHUB_ENV"
 
       - name: Ambil data dan hitung 7 metode
         if: env.SKIP != '1'
