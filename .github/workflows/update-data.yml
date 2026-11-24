@@ -9,8 +9,9 @@ on:
     # scripts/daily_gate.py melewatkan update bila penutupan terakhir sudah masuk ke data.
     - cron: "13 0,2,4,6 * * 2-6"
     - cron: "13 9,12 * * 1-6"
-    # Update harga tiap jam saat bursa AS buka (13:17–21:17 UTC; scripts/intraday_gate.py menyaring jam New York).
-    - cron: "17 13-21 * * 1-5"
+    # Update harga saat bursa AS buka, dua pemicu per jam (menit 17 dan 47) karena GitHub sering menjatuhkan jadwal;
+    # scripts/intraday_gate.py melewatkan bila update terakhir < 25 menit lalu (13:17–21:47 UTC; scripts/intraday_gate.py menyaring jam New York).
+    - cron: "17,47 13-21 * * 1-5"
   workflow_dispatch:
     inputs:
       jam_bursa:
@@ -37,7 +38,7 @@ jobs:
       FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
       FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
       FTP_DIR: ${{ secrets.FTP_DIR }}
-      INTRADAY: ${{ (github.event.schedule == '17 13-21 * * 1-5' || inputs.jam_bursa) && '1' || '0' }}
+      INTRADAY: ${{ (github.event.schedule == '17,47 13-21 * * 1-5' || inputs.jam_bursa) && '1' || '0' }}
     timeout-minutes: 50
     steps:
       - uses: actions/checkout@v5
