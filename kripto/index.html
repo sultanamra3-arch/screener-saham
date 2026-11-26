@@ -53,7 +53,7 @@
 "Layak beli hari ini":"Buy-eligible today","Data diperbarui":"Data updated","Diperbarui":"Updated","harga sementara":"intraday price","Harga sementara":"Intraday price","diperbarui tiap jam":"updated hourly",
 "Harga terakhir":"Last price","Likuid":"Liquid","+ Kurang likuid":"+ Less liquid","Semua saham":"All stocks","Hanya syariah":"Sharia only","Semua sektor":"All sectors","Semua kategori":"All categories",
 "Memenuhi syarat":"Qualifies","memenuhi syarat":"qualify","Layak beli":"Buy-eligible","layak beli":"buy-eligible","Di Portofolio":"In portfolio","Sinyal jual":"Sell signal","Tanpa sinyal":"No signal",
-"Gabungan 7 metode":"Combined 7 methods","Kesehatan pasar":"Market health","Memenuhi syarat per metode":"Qualifying per method","Layak beli per metode":"Buy-eligible per method",
+"Gabungan semua metode":"All methods combined","Kesehatan pasar":"Market health","Memenuhi syarat per metode":"Qualifying per method","Layak beli per metode":"Buy-eligible per method",
 "Satu saham bisa lolos lebih dari satu metode":"One stock can pass more than one method","Sektor, 1 bulan":"Sectors, 1 month","Median perubahan harga per sektor":"Median price change per sector",
 "Jarak harga dari rata-rata 200 hari":"Distance from the 200-day average","Jumlah saham per rentang 10%":"Number of stocks per 10% range","Memuat grafik…":"Loading chart…",
 "Harga penutupan harian":"Daily closing price","di bawah 40%: pasar lesu":"below 40%: weak market",
@@ -62,7 +62,7 @@
 "Jan":"Jan","Feb":"Feb","Mar":"Mar","Apr":"Apr","Mei":"May","Jun":"Jun","Jul":"Jul","Agu":"Aug","Sep":"Sep","Okt":"Oct","Nov":"Nov","Des":"Dec",
 "💡 Keterangan":"💡 Notes","💡 Saran":"💡 Suggestion","informasi edukasi, bukan ajakan membeli atau menjual":"educational information, not a recommendation to buy or sell",
 "hitungan otomatis, bukan nasihat keuangan pribadi":"automatic calculation, not personal financial advice",
-"Sinyal 7 metode per saham":"7-method signals per stock","Tampilkan":"Show","Lolos kriteria ≥ 3 metode":"Passes criteria of ≥ 3 methods","Terlambat":"Too late","Hindari":"Avoid","Tunggu":"Wait",
+"Sinyal tiap metode per saham":"Signals per stock by method","Tampilkan":"Show","Lolos kriteria ≥ 3 metode":"Passes criteria of ≥ 3 methods","Terlambat":"Too late","Hindari":"Avoid","Tunggu":"Wait",
 "bingkai hijau = lolos semua kriteria":"green frame = passes all criteria","Harga":"Price","Status per metode":"Status per method","Sinyal aktif":"Active signals","Lolos":"Passed","Transaksi/hari":"Value/day",
 "Memenuhi syarat:":"Qualifies:","Layak beli:":"Buy-eligible:","Hindari/jual:":"Avoid/sell:","syariah":"sharia","di luar area beli":"outside buy area","Ketuk saham untuk penjelasan lengkapnya.":"Tap a stock for the full explanation.",
 "Enter = buka saham teratas · Esc = tutup":"Enter = open top result · Esc = close","Tanya Flo":"Ask Flo","Asisten ChartFlow":"ChartFlow assistant","Kondisi pasar hari ini":"Market condition today",
@@ -107,7 +107,7 @@
     [/^(\d+) saham · (\d+) likuid$/,"$1 stocks · $2 liquid"],[/^(\d+) koin$/,"$1 coins"],
     [/^harga penutupan (.+)$/,"closing price $1"],[/^· harga penutupan (.+)$/,"· closing price $1"],
     [/^(Senin|Selasa|Rabu|Kamis|Jumat|Sabtu|Minggu)\b(.*)$/,function(m,d,r){return ({Senin:"Monday",Selasa:"Tuesday",Rabu:"Wednesday",Kamis:"Thursday",Jumat:"Friday",Sabtu:"Saturday",Minggu:"Sunday"})[d]+r.replace(" pukul "," at ");}],
-    [/^(Value|Growth|Quality|Dividen|CAN SLIM|Momentum|Swing): (Memenuhi syarat|Layak beli|Tunggu|Terlambat|Hindari)$/,function(m,a,b){return (a==="Dividen"?"Dividend":a)+": "+(EN[b]||b);}],
+    [/^(Value|Growth|Quality Value|Quality|Dividen|CAN SLIM|Momentum|Swing): (Memenuhi syarat|Layak beli|Tunggu|Terlambat|Hindari)$/,function(m,a,b){return (a==="Dividen"?"Dividend":a)+": "+(EN[b]||b);}],
     [/^(.+) \((\d+) saham\)$/,"$1 ($2 stocks)"]
   ];
   var ORIG=new WeakMap(), MINE=new WeakMap(), AO=new WeakMap(), ATTRS=["placeholder","aria-label","title"];
@@ -2516,7 +2516,7 @@ window.addEventListener("online",()=>autoCheck(true));
       ["RSI14",n2(o.rsi14)],["P/E",n2(o.pe)],["P/B",n2(o.pb)],["ROE %",n2(o.roe)],["yield dividen %",n2(o.div)],["laba tumbuh %/th",n2(o.epsG)],["pendapatan tumbuh %",n2(o.salesG)],["utang/ekuitas",n2(o.de)],["margin kotor %",n2(o.gm)],["margin operasi %",n2(o.om)],["ROIC %",n2(o.roic)],["P/FCF",n2(o.pfcf)],["payout %",n2(o.payout)],["current ratio",n2(o.cr)],["dividen tanpa putus (th)",n2(o.divYears)],["beta",n2(o.beta)],["puncak 52 minggu",o.hi52!=null?usd(o.hi52):null],["kapitalisasi",o.mcap!=null?(IS_ID&&!CR?nf(o.mcap/1e12,1)+" triliun":nf(o.mcap/1e9,1)+" miliar"):null],["volume vs biasa",o.volR!=null?nf(o.volR,1)+"×":null],["nilai transaksi hari ini",o.val1d!=null?usd(o.val1d):null],["likuiditas",o.liq?({L:"likuid",K:"kurang likuid",T:"tidak likuid"}[o.liq]||o.liq):null],["syariah",o.syariah?"ya":null]]
       .filter(x=>x[1]!=null).map(x=>x[0]+" "+x[1]).join("; ");
     let s=`\n[${t}] ${o.company||""}${o.sector?" · "+o.sector:""}\n${f}`;
-    if(typeof M!=="undefined") M.forEach(m=>{ try{ const st=uv(o,m.id); const lv=typeof levels==="function"?levels(m.id,st):""; s+=`\n- ${m.name}: ${(ST[st.s]||st.s)}${st.fresh&&st.s==="buy"?" (baru)":""}${lv?" · "+String(lv).replace(/<[^>]+>/g,""):""}${st.why?" · "+String(st.why).replace(/<[^>]+>/g,""):""}`; }catch(e){} });
+    if(typeof M!=="undefined") M.forEach(m=>{ try{ const st=uv(o,m.id); const lv=typeof levels==="function"?levels(m.id,st):""; s+=`\n- ${m.name}: ${(isEval(m.id,st.s)?"Evaluasi":ST[st.s]||st.s)}${st.fresh&&st.s==="buy"?" (baru)":""}${lv?" · "+String(lv).replace(/<[^>]+>/g,""):""}${st.why?" · "+String(st.why).replace(/<[^>]+>/g,""):""}`; }catch(e){} });
     try{ const sm=summaryOf(o); s+=`\nLolos ${sm.pass} dari ${M.length} kriteria metode.`; }catch(e){}
     const k=o.ks; if(k&&(k.df!=null||k.di!=null)) s+=`\nKepemilikan (KSEI ${k.m||""}): asing ${k.df!=null?(k.df>0?"+":"")+nf(k.df,2)+" poin":"-"}; reksa dana/dana pensiun/asuransi ${k.di!=null?(k.di>0?"+":"")+nf(k.di,2)+" poin":"-"} (ambang tanda ±0,5 poin)`;
     if(o.ins) s+=`\nOrang dalam (insider) membeli: ${o.ins.p} orang dalam 90 hari, total ${usd(o.ins.v)}${o.ins.cl?", beberapa dalam 30 hari":""}`;
