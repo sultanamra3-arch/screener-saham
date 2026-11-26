@@ -1,6 +1,6 @@
 # Screener Saham S&P 500 + Nasdaq-100
 
-Website screener dengan 7 metode (Value, Growth, Quality, Dividen, Momentum, CAN SLIM, Swing), tab Ringkasan gabungan per saham, dan perbandingan ETF VOO / SPY / QQQ.
+Website screener dengan 8 metode (Value, Growth, Quality, Quality Value [uji coba, terinspirasi gaya Buffett], Dividen, Momentum, CAN SLIM, Swing), tab Ringkasan gabungan per saham, dan perbandingan ETF VOO / SPY / QQQ.
 
 Data diperbarui otomatis **Selasa–Sabtu sekitar pukul 05.45 WIB** oleh GitHub Actions. Pengingat order dikirim ke Telegram **Senin–Jumat pukul 19.30 WIB** bila ada sinyal beli.
 
@@ -62,7 +62,7 @@ index.html                     website
 data/stocks.json               data terbaru (ditulis otomatis)
 data/constituents.json         daftar anggota indeks (ditulis otomatis)
 scripts/fetch_data.py          skrip pengambil data
-scripts/strategies.py          aturan 7 metode
+scripts/strategies.py          aturan 8 metode
 scripts/notify_telegram.py     pesan Telegram
 .github/workflows/update-data.yml  jadwal otomatis
 ```

@@ -673,7 +673,7 @@ def main():
         except Exception:
             prev_day = None
     state = load_state()
-    log("Menghitung 7 metode ...")
+    log("Menghitung 8 metode ...")
     res = strategies.run(rows, prices, volume, day, state)
     import dataguard
     dq = dataguard.apply(rows, prices)

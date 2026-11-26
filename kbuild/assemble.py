@@ -15,7 +15,7 @@ K = lambda f: open(HERE / f, encoding="utf-8").read()
 
 head = US[:US.index("</style>")]
 head = R(head, "<title>Screener Saham S&amp;P 500 + Nasdaq-100</title>", "<title>Screener Kripto · 50 koin terbesar di Indodax</title>")
-head = R(head, '<meta name="description" content="Saring saham S&P 500 dan Nasdaq-100 dengan 7 metode investor dan trader, plus ringkasan gabungan per saham.">',
+head = R(head, '<meta name="description" content="Saring saham S&P 500 dan Nasdaq-100 dengan 8 metode investor dan trader (termasuk Quality Value, uji coba), plus ringkasan gabungan per saham.">',
          '<meta name="description" content="50 koin kripto terbesar yang ada di Indodax, harga dalam Rupiah, Lampu BTC, metode Momentum 90 hari, area support, dan portofolio.">')
 head = head.replace('href="icons/', 'href="../icons/')
 head = re.sub(r'<script>try\{const q=new URLSearchParams\(location.search\);.*?</script>', '<script>try{localStorage.setItem("lastMarket","kripto");}catch(e){}</script>', head, count=1, flags=re.S)
@@ -76,7 +76,7 @@ cyc = R(cyc, '<span class="note">· harga BEI tertunda ±15 menit</span>', '<spa
 cyc = R(cyc, 'title="Grafik TradingView: harga lebih baru (tertunda ±15 menit), alat gambar dan indikator lengkap"', 'title="Grafik TradingView: harga real-time Binance dalam USDT, alat gambar dan indikator lengkap"')
 cyc = R(cyc, "<div class=\"mcard\"><h4><span>Kesehatan pasar (${b.n} saham)</span></h4>", "<div class=\"mcard\"><h4><span>Kesehatan pasar (${b.n} koin)</span></h4>")
 cyc = R(cyc, "% saham di atas SMA200 setahun terakhir. Di bawah 50% = mayoritas saham dalam tren turun.", "% koin di atas SMA200 setahun terakhir. Di bawah 50% = mayoritas koin dalam tren turun.")
-cyc = R(cyc, "<h4><span>Status di 7 metode</span></h4>", "<h4><span>Status metode</span></h4>")
+cyc = R(cyc, "<h4><span>Status di semua metode</span></h4>", "<h4><span>Status metode</span></h4>")
 cyc = R(cyc, "${isIdx?nf(a.price,isIdx&&a.price>1000?0:2):usd(a.price)}", "${usd(isIdx&&o==null?(rows.find(x=>x.ticker===sel)||{}).price||a.price:(o?o.price:a.price))}")
 cyc = R(cyc, "const pf=idr?{type:\"price\",precision:0,minMove:1}:{type:\"price\",precision:2,minMove:0.01};",
         "const pdec=decOf(C[C.length-1]||1), pf={type:\"price\",precision:pdec,minMove:Math.pow(10,-pdec)};")
